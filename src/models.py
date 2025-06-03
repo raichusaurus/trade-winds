@@ -21,3 +21,8 @@ class SleeperLeague(BaseModel):
 
     def __eq__(self, other):
         return isinstance(other, SleeperLeague) and self.league_id == other.league_id
+
+class SleeperRoster(BaseModel):
+    league_id: str
+    user_id: str
+    team_name: str | None = None

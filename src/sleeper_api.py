@@ -30,33 +30,14 @@ def safe_get(url: str) -> dict:
 
     raise RuntimeError(f"❌ Failed to fetch data after {MAX_RETRIES} attempts: {url}")
 
-def get_user_id(username: str) -> str:
+def get_user(username: str) -> str:
     url = f"https://api.sleeper.app/v1/user/{username}"
-    data = safe_get(url)
-    try:
-        user = SleeperUser(**data)
-        return user.user_id
-    except ValidationError as e:
-        print(f"Validation error parsing user data: {e}")
-        raise
+    return safe_get(url)
 
 def get_user_leagues(user_id: str, season: str = "2025") -> List[SleeperLeague]:
     url = f"https://api.sleeper.app/v1/user/{user_id}/leagues/nfl/{season}"
-    data = safe_get(url)
-    try:
-        return [SleeperLeague(**league) for league in data]
-    except ValidationError as e:
-        print(f"Validation error parsing league data: {e}")
-        raise
+    return safe_get(url)
 
 def get_league_users(league_id: str) -> List[SleeperUser]:
     url = f"https://api.sleeper.app/v1/league/{league_id}/users"
-    response = requests.get(url)
-    response.raise_for_status()
-    data = response.json()
-    try:
-        return [SleeperUser(**user) for user in data]
-    except ValidationError as e:
-        print(f"Validation error parsing user data: {e}")
-        raise
-
+    return safe_get(url)

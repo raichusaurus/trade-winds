@@ -1,6 +1,6 @@
 import time
-from src.sleeper_api import get_user_id, get_user_leagues, get_league_users
 from src.storage import InMemoryStorage
+from src.services.services import fetch_user_id, fetch_user_leagues, fetch_league_users_and_rosters
 
 class SleeperCrawler:
     def __init__(self, seed_username: str, storage: InMemoryStorage):
@@ -10,7 +10,7 @@ class SleeperCrawler:
         self.league_queue = []
 
         # Initialize
-        seed_user_id = get_user_id(seed_username)
+        seed_user_id = fetch_user_id(seed_username)
         self.user_queue.append(seed_user_id)
         self.storage.known_users.add(seed_user_id)
 
@@ -25,7 +25,7 @@ class SleeperCrawler:
         while self.user_queue or self.league_queue:
             while self.user_queue:
                 user_id = self.user_queue.pop(0)
-                leagues = get_user_leagues(user_id)
+                leagues = fetch_user_leagues(user_id)
                 for league in leagues:
                     if league not in self.storage.known_leagues:
                         self.storage.known_leagues.add(league)
@@ -33,7 +33,7 @@ class SleeperCrawler:
                 yield ()                      
             if self.league_queue:
                 league_id = self.league_queue.pop(0)
-                users = get_league_users(league_id)
+                users, rosters = fetch_league_users_and_rosters(league_id)
                 for user in users:
                     if user not in self.storage.known_users:
                         self.storage.known_users.add(user)
