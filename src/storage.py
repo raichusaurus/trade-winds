@@ -1,3 +1,4 @@
+from typing import Set
 from src.models import SleeperUser, SleeperLeague
 
 class InMemoryStorage:
@@ -6,7 +7,7 @@ class InMemoryStorage:
         self.known_leagues: Set[SleeperLeague] = set()
 
     def add_user(self, user: SleeperUser) -> bool:
-        if User in self.known_users:
+        if user in self.known_users:
             return False
         self.known_users.add(user)
         return True
