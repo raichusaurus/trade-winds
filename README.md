@@ -1,11 +1,12 @@
-# ⚓️ Trade Winds
+# Trade Winds
 
 **Trade Winds** is a modular fantasy football crawler and data engine designed to explore the Sleeper API, analyze trades, and eventually provide player valuation metrics across leagues. The system is built in Python and structured to scale with separate services, a pluggable storage layer, and an upcoming API and persistence layer.
 
 ---
 
-## 🗂 Project Structure
+## Project Structure
 
+```plaintext
 trade_winds/
 ├── src/
 │   ├── crawler_service/          # Core crawler logic and orchestration
@@ -25,10 +26,11 @@ trade_winds/
 ├── Makefile                      # CLI task shortcuts (🔜 planned)
 ├── docker-compose.yml            # Local orchestration (🔜 planned)
 └── README.md
+```
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### 1. Clone the repository
 
@@ -63,7 +65,7 @@ Supports `--mode manual` for step-by-step debug-friendly traversal.
 
 ---
 
-## 🧠 Project Goals
+## Project Goals
 
 * **Traverse Sleeper’s user-league graph** starting from a seed user
 * **Track trades** across leagues (with recency filters)
@@ -73,7 +75,7 @@ Supports `--mode manual` for step-by-step debug-friendly traversal.
 
 ---
 
-## 📌 Roadmap (Epics)
+## Roadmap (Epics)
 
 | Epic              | Description                                |
 | ----------------- | ------------------------------------------ |
@@ -87,7 +89,7 @@ Supports `--mode manual` for step-by-step debug-friendly traversal.
 
 ---
 
-## 🛠 Contributing
+## Contributing
 
 This repo uses a simplified but organized workflow:
 
@@ -95,7 +97,7 @@ This repo uses a simplified but organized workflow:
 2. Create a branch like `refactor/move-safe-get` or `feat/trade-sync`
 3. Make your changes
 4. Open a PR and link the issue (`Closes #X`)
-5. Merge after review or solo sanity check ✅
+5. Merge after review or solo sanity check
 
 Labels like `epic`, `crawler`, `api`, `infra`, and `feature` are used to track work.
 
@@ -106,8 +108,3 @@ Labels like `epic`, `crawler`, `api`, `infra`, and `feature` are used to track w
 MIT license coming soon. For questions or collaboration ideas, open an issue or [message @raichusaurus on GitHub](https://github.com/raichusaurus).
 
 ---
-
----
-
-Let me know when it's committed — I’ll help you create a closing GitHub issue for tracking the README work as “done.”
-```
