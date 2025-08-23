@@ -1,5 +1,5 @@
 from typing import Set
-from src.models import SleeperUser, SleeperLeague
+from src.models.sleeper import SleeperUser, SleeperLeague
 
 class InMemoryStorage:
     def __init__(self):

@@ -1,6 +1,6 @@
 import time
-from src.storage import InMemoryStorage
-from src.services.services import fetch_user_id, fetch_user_leagues, fetch_league_users_and_rosters
+from src.storage.in_memory import InMemoryStorage
+from src.services.sleeper import fetch_user_id, fetch_user_leagues, fetch_league_users_and_rosters
 
 class SleeperCrawler:
     def __init__(self, seed_username: str, storage: InMemoryStorage):

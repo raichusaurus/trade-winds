@@ -1,6 +1,6 @@
-from src.config import settings
-from src.storage import InMemoryStorage
-from src.crawler import SleeperCrawler
+from src.config.config import settings
+from src.storage.in_memory import InMemoryStorage
+from src.crawler.engine import SleeperCrawler
 
 def main():
     seed_username = settings.seed_sleeper_username
