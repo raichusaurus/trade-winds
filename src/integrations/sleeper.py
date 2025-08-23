@@ -1,6 +1,6 @@
 from typing import List
 from pydantic import ValidationError
-from src.models import SleeperUser, SleeperLeague
+from src.models.sleeper import SleeperUser, SleeperLeague
 from src.utils.http import safe_get
 
 def get_user(username: str) -> str:

@@ -1,11 +1,11 @@
 from typing import List, Tuple
 from pydantic import ValidationError
 
-from src import sleeper_api
-from src.models import SleeperUser, SleeperLeague, SleeperRoster
+from src.integrations import sleeper
+from src.models.sleeper import SleeperUser, SleeperLeague, SleeperRoster
 
 def fetch_user_id(username: str) -> str:
-    user_data = sleeper_api.get_user(username)
+    user_data = sleeper.get_user(username)
     try:
         user = SleeperUser(**user_data)
         return user.user_id
@@ -14,7 +14,7 @@ def fetch_user_id(username: str) -> str:
         raise
 
 def fetch_user_leagues(user_id: str, season: str = "2025") -> List[SleeperLeague]:
-    leagues_data = sleeper_api.get_user_leagues(user_id, season)
+    leagues_data = sleeper.get_user_leagues(user_id, season)
     try:
         return [SleeperLeague(**league) for league in leagues_data]
     except ValidationError as e:
@@ -22,7 +22,7 @@ def fetch_user_leagues(user_id: str, season: str = "2025") -> List[SleeperLeague
         raise
 
 def fetch_league_users_and_rosters(league_id: str) -> Tuple[List[SleeperUser], List[SleeperRoster]]:
-    users_data = sleeper_api.get_league_users(league_id)
+    users_data = sleeper.get_league_users(league_id)
     users = []
     rosters = []
 
