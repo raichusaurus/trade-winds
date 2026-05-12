@@ -73,9 +73,8 @@ Use this template to define how the system will be verified before implementatio
 
 ---
 
-## Approval
+## Phase Gate
 
-- **Test/CI Lead:** _________________ Date: _______
-- **Tech Lead:** _________________ Date: _______
-
-**Ready to move to Implementation?** [ ] Yes [ ] No (Explain):
+- **Ready to move to Implementation?** [ ] Yes [ ] No
+- **Remaining concerns:**
+- **Owner decision:**

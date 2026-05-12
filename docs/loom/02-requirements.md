@@ -10,15 +10,20 @@ Use this template to define and document requirements for your project.
 
 ## Overview
 
-### Problem Statement (from Discovery)
-[Recap the problem from Discovery phase]
+### Discovery Inputs
+*Pull these forward from Discovery before writing new requirements.*
 
-Code
+- **Core problem:**
+- **Primary user / operator:**
+- **Future / external users:**
+- **Working shape:**
+- **First useful version:**
+- **Explicitly out of scope:**
+- **Success / validation signals:**
+- **Open questions carried forward:**
 
 ### Solution Vision
-[High-level vision of what we're building]
-
-Code
+*High-level vision of what we're building, based on the Discovery inputs above.*
 
 ---
 
@@ -167,13 +172,11 @@ A feature is considered done when:
 
 ---
 
-## Approval
+## Phase Gate
 
-- **Requirements Lead:** _________________ Date: _______
-- **Product Owner:** _________________ Date: _______
-- **Tech Lead:** _________________ Date: _______
-
-**Ready to move to Architecture?** [ ] Yes [ ] No (Explain):
+- **Ready to move to Architecture?** [ ] Yes [ ] No
+- **Remaining concerns:**
+- **Owner decision:**
 
 ---
 

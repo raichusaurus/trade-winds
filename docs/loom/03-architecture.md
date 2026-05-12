@@ -240,13 +240,11 @@ Code
 
 ---
 
-## Approval
+## Phase Gate
 
-- **Architecture Lead:** _________________ Date: _______
-- **Tech Lead:** _________________ Date: _______
-- **Ops Lead:** _________________ Date: _______
-
-**Ready to move to Planning & Decomposition?** [ ] Yes [ ] No (Explain):
+- **Ready to move to Planning & Decomposition?** [ ] Yes [ ] No
+- **Remaining concerns:**
+- **Owner decision:**
 
 ---
 

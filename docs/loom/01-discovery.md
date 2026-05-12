@@ -22,9 +22,16 @@ A clean restart gives the project a better foundation while preserving the older
 - The previous implementation is archived as `trade-winds-legacy`.
 - The new public GitHub repository is `raichusaurus/trade-winds`.
 - The new repo currently contains only this Loom documentation scaffold.
-- The product direction, user, MVP, and technical architecture still need discovery.
+- Discovery has clarified the product direction, primary user, MVP shape, and major constraints. Requirements and Architecture still need to turn those decisions into buildable scope.
 
-### Legacy Implementation Snapshot
+---
+
+## Project Context
+
+### Project Type
+Trade Winds is a fresh implementation and rewrite pilot. It is also the first real project being used to prove out Loom as a workflow framework.
+
+### Prior Art / Existing System
 The archived implementation described Trade Winds as a modular fantasy football crawler and data engine for the Sleeper API. Its intended direction was to traverse Sleeper's user-league graph, track trades across leagues, model player value from real user behavior, and eventually expose league metadata and valuation data through an API.
 
 Observed legacy components:
@@ -39,7 +46,14 @@ Initial read: the old repo contains a promising domain idea and a small proof-of
 
 The legacy implementation should be treated as reference material, not as a foundation that must be preserved. If a specific piece of the old implementation still looks good, it can be reused intentionally, but the default posture is to rebuild from scratch.
 
-### Working Product Shape
+| Source / Artifact | What It Shows | Keep / Discard / Rethink | Notes |
+|-------------------|---------------|---------------------------|-------|
+| `trade-winds-legacy` README | Strong domain idea and original roadmap | Keep / Rethink | Keep the Sleeper trade-value idea; rethink scope through Loom |
+| Legacy crawler | Proof that username-seeded graph crawling is plausible | Keep / Rethink | Reuse ideas if they fit; rebuild around persistence and resumability |
+| Legacy in-memory storage | Early proof-of-concept storage only | Discard | MVP needs SQLite and durable crawl state |
+| Legacy planned API/Docker/tests | Useful future direction, not implemented | Rethink | Requirements should decide what belongs in MVP |
+
+### Working Shape
 
 Trade Winds has several connected responsibilities:
 
@@ -50,12 +64,6 @@ Trade Winds has several connected responsibilities:
 - Use weighted trade signals to infer relative player valuations and rankings.
 
 Open product question: whether every completed trade should be treated as equally valid after date weighting, or whether future versions should account for league format, roster context, draft picks, outliers, collusion, injured players, or obvious dump trades.
-
-### Primary User
-
-The first useful version is optimized for John as the builder-analyst and first operator. He needs a system that can collect data, run the valuation model, inspect outputs, and decide whether the approach is credible.
-
-The future end user is a fantasy football manager evaluating players and trades. Even if the first version is not a polished user-facing app, its output should be validated against whether it appears useful, understandable, and directionally trustworthy for that audience.
 
 ### First Useful Version
 
@@ -79,6 +87,8 @@ Explicitly out of scope for MVP:
 - Complex machine learning before the basic trade-derived model works.
 - Perfect handling of every league format immediately.
 - Scraping or data collection approaches that violate source terms.
+
+### Detailed MVP Notes
 
 MVP trade modeling should include players and draft picks. That makes the output more useful for fantasy managers, especially dynasty players, but it also means draft capital needs to be represented as a comparable asset class rather than ignored or stripped out.
 
@@ -120,25 +130,25 @@ KeepTradeCut can be used as a helpful guideline, but not as ground truth. KTC re
 
 ---
 
-## Stakeholders
+## Users & Stakeholders
 
-### Primary Stakeholders
-*Who will directly benefit from solving this problem?*
+### Primary User / Operator
+The first useful version is optimized for John as the builder-analyst and first operator. He needs a system that can collect data, run the valuation model, inspect outputs, and decide whether the approach is credible.
+
+### Future / External Users
+The future end user is a fantasy football manager evaluating players and trades. Even if the first version is not a polished user-facing app, its output should be validated against whether it appears useful, understandable, and directionally trustworthy for that audience.
+
+### Stakeholders
+*Who benefits, influences decisions, contributes, or is affected?*
 
 | Stakeholder | Role | Needs | Constraints |
 |-------------|------|-------|-------------|
 | John Hightshue | Project owner / builder / first operator | A clean, useful project restart, a good Loom pilot, and valuation outputs worth trusting | Wants to preserve the old implementation as history |
 | Codex | Build collaborator / Loom orchestrator | Clear context, phase outputs, and implementation boundaries | Should avoid premature scaffolding before Discovery |
-
-### Secondary Stakeholders
-*Who else is affected by this solution?*
-
-| Stakeholder | Role | Needs | Constraints |
-|-------------|------|-------|-------------|
 | Fantasy football managers | Future end users / validation audience | Rankings and valuations that help evaluate players and trades | Initial version may not expose a polished product interface |
 | Loom | Workflow framework under test | Feedback from real project use | Framework updates should remain separate from Trade Winds unless intentionally upstreamed |
 
-### Decision Makers
+### Decision Owner
 *Who has the final say on whether we proceed?*
 
 John Hightshue.
@@ -166,6 +176,30 @@ John Hightshue.
 - **Compliance/Regulatory:** No known formal compliance requirements for MVP, but data collection should respect Sleeper's documented usage guidance and public API expectations.
 - **Organizational policies:** Keep spending low and avoid unnecessary hosted services until there is evidence of product or income potential.
 - **Dependencies:** The project depends on Loom being practical as a workflow and on Sleeper API access remaining stable enough for crawling, whether from local or low-cost cloud execution.
+
+---
+
+## Success & Validation
+
+### Success Metrics
+*How will we know this project is working? What signals are measurable?*
+
+| Metric / Signal | Target | How We'll Measure |
+|-----------------|--------|-------------------|
+| Repeatable crawl | A crawl can discover and persist users, leagues, and trades without starting over after interruption | SQLite run metadata, fetched markers, and crawl counts |
+| Valuation output | Player and pick rankings are generated from completed trades | CSV, CLI summary, and lightweight dashboard output |
+| Ranking credibility | Rankings are stable enough across runs and configurable lookback windows to inspect seriously | Compare generated rankings across repeated runs and lookback settings |
+| End-user readability | A fantasy manager can understand the rankings table and confidence context | Thin dashboard review |
+| Cost discipline | MVP runs locally or on free-tier cloud services | Infrastructure choices and monthly spend |
+
+### Validation Strategy
+Validate the data and model before investing in polish. Start with repeatable local crawling, persist raw facts faithfully, generate rankings, inspect ranking stability across lookback windows, and use KTC only as a directional comparison rather than a target.
+
+### Evidence Needed Before Requirements
+- Confirm the MVP is centered on recurring Sleeper crawling, persisted trade facts, player/pick valuation, CSV/CLI output, and a thin dashboard.
+- Carry forward cost as the main hard constraint.
+- Requirements should assume local-first execution with a free-tier cloud fallback if local crawling is unreliable.
+- Preserve open questions about concrete stack choices and whether any legacy modules are worth reusing as Requirements/Architecture decisions, not Discovery blockers.
 
 ---
 
@@ -238,6 +272,25 @@ John Hightshue.
 
 ---
 
+## Framework Feedback
+
+*If this project is also teaching us about Loom, capture reusable process lessons here.*
+
+### What Worked
+- One-question-at-a-time Discovery helped preserve momentum without making the phase feel like paperwork.
+- The new template structure better separates product context, users, validation, and phase-gate decisions.
+- Keeping a filled project doc separate from the source Loom template makes it easier to evolve the framework without overwriting project decisions.
+
+### Friction
+- Updating templates after a project phase has started requires careful migration; filled phase docs should not be overwritten wholesale.
+- Discovery can sprawl unless the template makes success and phase-gate criteria explicit.
+
+### Template / Process Improvements
+- The updated Discovery template's `Project Context`, `Success & Validation`, `Framework Feedback`, and `Phase Gate` sections fit this pilot better than the original scaffold.
+- Future Loom migrations should distinguish between unfilled template docs and active phase artifacts with real decisions.
+
+---
+
 ## Discovery Outputs
 
 ### Key Insights
@@ -275,27 +328,25 @@ John Hightshue.
 ### Open Questions
 *What still needs to be explored?*
 
-- What specific legacy patterns or modules are worth reusing, if any?
+- Which specific legacy patterns or modules are worth reusing, if any? This should be decided during Requirements and Architecture, not by default.
 - Which concrete stack choices best fit the cost constraint while keeping iteration fast?
-- What minimum cloud deployment shape is needed if local crawling proves unreliable?
+- What minimum free-tier cloud deployment shape is needed if local crawling proves unreliable?
 
 ### Next Steps
 *What needs to happen before Requirements?*
 
-- Summarize "keep / discard / rethink" findings from the legacy implementation.
-- Turn the current Discovery answers into sharper scope boundaries for Requirements.
-- Decide whether MVP planning should assume local-only execution or include a free-tier cloud fallback.
-- Convert discovery answers into Requirements.
+- Pull Discovery Inputs into the Requirements template.
+- Convert the first useful version into explicit in-scope and out-of-scope requirements.
+- Translate validation signals into acceptance tests and success criteria.
+- Carry stack and deployment choices forward as Requirements/Architecture decisions.
 
 ---
 
-## Sign-Off
+## Phase Gate
 
-- **Discovery Lead:** _________________ Date: _______
-- **Stakeholder:** _________________ Date: _______
-- **Decision Maker:** _________________ Date: _______
-
-**Ready to move to Requirements?** [ ] Yes [ ] No (Explain):
+- **Ready to move to Requirements?** [x] Yes [ ] No
+- **Remaining concerns:** Stack choice, exact cloud fallback shape, and any specific legacy code reuse should be resolved during Requirements and Architecture.
+- **Owner decision:** Discovery is complete enough to hand off. Start Requirements in a new session to preserve phase separation.
 
 ---
 

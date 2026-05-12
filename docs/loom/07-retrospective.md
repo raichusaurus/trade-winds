@@ -77,8 +77,9 @@ Use this template to evaluate the outcome and feed learnings into the next Loom 
 
 ---
 
-## Approval
+## Phase Gate
 
-- **Review Lead:** _________________ Date: _______
-- **Product Owner:** _________________ Date: _______
-- **Tech Lead:** _________________ Date: _______
+- **Review complete?** [ ] Yes [ ] No
+- **Follow-up Loom cycles identified?** [ ] Yes [ ] No
+- **Remaining concerns:**
+- **Owner decision:**

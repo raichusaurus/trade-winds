@@ -68,9 +68,8 @@ Use this template to track implementation work against the plan, contracts, and 
 
 ---
 
-## Approval
+## Phase Gate
 
-- **Implementation Lead:** _________________ Date: _______
-- **Reviewer:** _________________ Date: _______
-
-**Ready to move to Review & Retrospective?** [ ] Yes [ ] No (Explain):
+- **Ready to move to Review & Retrospective?** [ ] Yes [ ] No
+- **Remaining concerns:**
+- **Owner decision:**

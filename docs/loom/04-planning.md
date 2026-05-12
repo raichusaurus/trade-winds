@@ -111,13 +111,11 @@ Use this template to turn architecture into an executable plan for humans and ag
 
 ---
 
-## Approval
+## Phase Gate
 
-- **Planning Lead:** _________________ Date: _______
-- **Tech Lead:** _________________ Date: _______
-- **Product Owner:** _________________ Date: _______
-
-**Ready to move to Contracts & Tests / CI/CD?** [ ] Yes [ ] No (Explain):
+- **Ready to move to Contracts & Tests / CI/CD?** [ ] Yes [ ] No
+- **Remaining concerns:**
+- **Owner decision:**
 
 ---
 
