@@ -37,6 +37,8 @@ Observed legacy components:
 
 Initial read: the old repo contains a promising domain idea and a small proof-of-concept crawler, but the new project should revalidate the product goal before choosing architecture.
 
+The legacy implementation should be treated as reference material, not as a foundation that must be preserved. If a specific piece of the old implementation still looks good, it can be reused intentionally, but the default posture is to rebuild from scratch.
+
 ### Working Product Shape
 
 Trade Winds has several connected responsibilities:
@@ -74,7 +76,6 @@ Explicitly out of scope for MVP:
 
 - Public API.
 - Account/auth system.
-- Paid hosting or production deployment.
 - Complex machine learning before the basic trade-derived model works.
 - Perfect handling of every league format immediately.
 - Scraping or data collection approaches that violate source terms.
@@ -87,7 +88,7 @@ League format differences should be stored early, even if the first ranking outp
 
 The historical trade window should be configurable. Trade Winds should allow the operator to decide how far back to collect or include trades based on availability, model goals, and the desired balance between sample size and recency.
 
-Crawler execution should be phased. The system should start with a manual CLI command that runs the core crawler logic, then evolve toward a scheduled local job and eventually a deployed scheduled worker. The crawl logic should be shared across these modes rather than rewritten for each runtime.
+Crawler execution should be phased. The system should start with a manual CLI command that runs the core crawler logic, then evolve toward a scheduled local job and eventually a deployed scheduled worker. The crawl logic should be shared across these modes rather than rewritten for each runtime. While the project is local-first, MVP may still need a cloud-hosted execution path if local network conditions or API-rate issues make repeatable crawling unreliable.
 
 Initial graph discovery should start from John's Sleeper username. This keeps the first crawl understandable and gives the operator a familiar starting point. Additional seed types, such as explicit league IDs or a stored crawl frontier, can be added later after the username-seeded path works.
 
@@ -97,7 +98,7 @@ MVP persistence should start with SQLite because it provides real local storage 
 
 The first rankings output should be a CSV file, a concise CLI summary, and a lightweight dashboard. The CSV makes rankings easy to inspect, sort, compare, and share; the CLI summary gives immediate feedback after a run; the dashboard helps validate whether the rankings make sense as a user-facing experience.
 
-The first dashboard view should be a rankings inspection table, not a full application shell. It should show rank, asset name, value score, position or asset type, sample/confidence context, and eventually recent movement. Initial filters should support player versus pick, position, and later league-format splits such as superflex versus 1QB.
+The first dashboard view should be a rankings inspection table, not a full application shell. It should stay thin and focused: rank, asset name, value score, position or asset type, sample/confidence context, and eventually recent movement. Initial filters should support player versus pick, position, and later league-format splits such as superflex versus 1QB.
 
 Confidence should be treated as a composite signal rather than a single magical score. Useful confidence dimensions include number of trades involving the asset, number of leagues represented, recency of trade signals, stability across lookback windows, whether value is inferred directly or indirectly through connected trades, and format coverage such as whether there is enough superflex data to trust quarterback values.
 
@@ -149,22 +150,22 @@ John Hightshue.
 ### Timeline
 - **Deadline:** No hard external deadline yet, but the project should move quickly.
 - **Time to market:** High urgency because proving out Loom is part of the goal.
-- **Phase-based release?** Yes. Start with a local-first MVP, then consider deeper automation and hosted deployment only if the output is promising.
+- **Phase-based release?** Yes. Start with a local-first MVP, but allow lightweight cloud deployment during MVP if it is needed for stable crawling. Broader automation and hosting can stay conditional on promise.
 
 ### Resources
 - **Budget:** Keep costs near zero for MVP. Prefer free tiers and local-first tools unless the project shows real income potential.
 - **Team:** John Hightshue and Codex.
-- **Infrastructure:** Start local-first with SQLite; avoid requiring hosted infrastructure for MVP.
+- **Infrastructure:** Start local-first with SQLite. Use free-tier cloud services only if local execution proves unreliable or too constrained.
 
 ### Technical Constraints
 - **Existing systems:** Sleeper API is the primary external system for MVP.
-- **Technology requirements:** Sleeper API integration, local configuration for operator-specific secrets/settings, storage boundary that can support SQLite now and Postgres later.
+- **Technology requirements:** Sleeper API integration, local configuration for operator-specific secrets/settings, storage boundary that can support SQLite now and Postgres later, and flexibility to run either locally or on low-cost cloud infrastructure.
 - **Scalability needs:** Pilot/hobby scale first. The first system should handle repeatable crawls and ranking generation without assuming production-scale traffic.
 
 ### Organizational Constraints
 - **Compliance/Regulatory:** No known formal compliance requirements for MVP, but data collection should respect Sleeper's documented usage guidance and public API expectations.
 - **Organizational policies:** Keep spending low and avoid unnecessary hosted services until there is evidence of product or income potential.
-- **Dependencies:** The project depends on Loom being practical as a workflow and on Sleeper API access remaining stable enough for crawling.
+- **Dependencies:** The project depends on Loom being practical as a workflow and on Sleeper API access remaining stable enough for crawling, whether from local or low-cost cloud execution.
 
 ---
 
@@ -176,6 +177,7 @@ John Hightshue.
 | Assumption | Why We Believe It | How We'll Validate |
 |-----------|------------------|-------------------|
 | The rewrite should not copy the old architecture by default | The old repo is being preserved as a learning artifact, not treated as the new foundation | Review the legacy repo for lessons before architecture |
+| Some legacy pieces may still be worth reusing | Starting from scratch does not require ignoring good ideas or working code | Reuse only intentionally and only if it fits the new architecture |
 | Loom should begin with documentation and discovery | Loom is explicitly documentation-driven and sequential for new projects | Use this pilot to note whether that feels helpful or heavy |
 | `trade-winds` should keep the canonical repo name | The legacy repo was renamed and archived | Confirm the new public repo is the active project home |
 | Draft picks can be modeled alongside players | Sleeper trades often include picks, and omitting them would make many dynasty trades unusable | Start with a simple pick representation and inspect whether rankings behave plausibly |
@@ -187,6 +189,7 @@ John Hightshue.
 | Seed identity belongs in local config | The repository is public, and the seed username is operator-specific | Use environment variables or ignored local config for the real Sleeper username |
 | SQLite is the right MVP persistence backend | It gives real persistence and queryability without infra overhead | Keep persistence behind boundaries so Postgres can replace it later |
 | CSV, CLI summary, and lightweight dashboard are enough for first output validation | The model needs inspection, and the dashboard helps judge whether output works for fantasy managers | Generate sortable CSV output, print a short run/rankings summary, and expose a simple dashboard |
+| MVP may still need cloud execution | Local environments can have network or API-limit friction even when the product is still early | Keep deployment optional, but preserve a path to free-tier hosted crawling/dashboard if needed |
 | A rankings table is the right first dashboard view | The first UI should help inspect valuation output, not become a full product prematurely | Build a lightweight table with rank, asset, value, type/position, confidence context, and basic filters |
 | Confidence is multidimensional | No single metric captures whether a valuation is trustworthy | Track sample size, league coverage, recency, stability, directness, and format coverage where possible |
 | Completed weird trades still contain market information | The core signal is accepted trades, but outliers can distort rankings | Store all completed trades, flag outliers, and consider manual exclusion later |
@@ -217,6 +220,7 @@ John Hightshue.
 | Username seeding may create a biased initial graph | Medium | Medium | Accept this for MVP validation; expand seed strategies after the first crawler path is proven |
 | Storage choices leak into business logic | High | Medium | Define persistence boundaries before implementation and avoid coupling crawler/model code directly to SQLite |
 | Output format becomes product work too early | Medium | Medium | Keep the dashboard lightweight and focused on ranking inspection; defer public API, auth, and production polish |
+| Local execution environment blocks reliable crawling | Medium | Medium | Keep a free-tier cloud path available for crawler or dashboard execution during MVP if necessary |
 | Rankings are unstable across configuration changes | High | Medium | Treat stability across lookback windows and repeat runs as an explicit validation criterion |
 | Confidence score creates false precision | Medium | Medium | Start by exposing confidence dimensions or coarse labels rather than overclaiming exact certainty |
 | Outlier trades distort valuations | High | Medium | Flag statistical outliers in MVP; add manual exclusion only if inspection shows it is needed |
@@ -241,6 +245,7 @@ John Hightshue.
 
 - The original project was centered on fantasy football data from Sleeper, especially graph traversal and trade/player value analysis.
 - The old implementation proved some basic crawling concepts but did not yet establish persistence, tests, API boundaries, or product experience.
+- The old implementation should inform the rewrite, but the rewrite should not feel obligated to preserve structure unless a specific piece still earns its place.
 - The new project has a clearer product center: recurring data collection from Sleeper trades, time-weighted trade signals, and relative player valuations.
 - A key modeling assumption is that completed trades can be treated as valid market behavior. This is powerful because it uses real decisions instead of expert rankings, but it may need guardrails later.
 - The first user is the builder-analyst, but the output must be judged by whether it would help fantasy football managers make better player and trade decisions.
@@ -254,7 +259,7 @@ John Hightshue.
 - The first crawl seed should be John's Sleeper username, with other seed types deferred until the basic graph expansion works.
 - MVP persistence should use SQLite while preserving a storage boundary that allows Postgres or another backend later.
 - First ranking output should include CSV, a concise CLI summary, and a lightweight dashboard.
-- The first dashboard view should be a rankings table with basic filters and confidence/sample context.
+- The first dashboard view should be a thin rankings table with basic filters and confidence/sample context.
 - Confidence should account for sample size, league coverage, recency, stability, direct versus indirect inference, and format coverage.
 - Store all completed trades initially, flag outliers, and defer manual exclusions until there is evidence they are needed.
 - Draft picks should be stored with the information available at trade time, including exact position only when known; bucketing can be derived later.
@@ -263,21 +268,23 @@ John Hightshue.
 - Resumable crawling should persist frontier state, fetched entities, and crawl run metadata in SQLite.
 - Ranking credibility should be judged first by stability across runs/lookback windows, with KTC used only as a directional guideline.
 - Trade Winds should distinguish crowdsourced opinion from crowdsourced facts: accepted trades are the primary signal.
+- Money is the only hard technical/business constraint right now; hosted services should stay on free tiers unless the project proves income potential.
+- Local-first is preferred, but MVP may still end with low-cost cloud deployment if local crawling conditions are unreliable.
 - The key discovery task is to decide whether the first useful version is primarily a data engine, an analysis tool, an API product, a dashboard, or some combination staged over time.
 
 ### Open Questions
 *What still needs to be explored?*
 
-- What should the new implementation intentionally avoid from the legacy version?
-- What stack choices are constraints versus preferences?
-- How much of the dashboard should exist in MVP versus later polish?
+- What specific legacy patterns or modules are worth reusing, if any?
+- Which concrete stack choices best fit the cost constraint while keeping iteration fast?
+- What minimum cloud deployment shape is needed if local crawling proves unreliable?
 
 ### Next Steps
 *What needs to happen before Requirements?*
 
-- Summarize what the new implementation should intentionally avoid from the legacy version.
+- Summarize "keep / discard / rethink" findings from the legacy implementation.
 - Turn the current Discovery answers into sharper scope boundaries for Requirements.
-- Summarize "keep / discard / rethink" findings.
+- Decide whether MVP planning should assume local-only execution or include a free-tier cloud fallback.
 - Convert discovery answers into Requirements.
 
 ---
