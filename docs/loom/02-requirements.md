@@ -87,6 +87,19 @@ MVP output must include enough context to judge credibility: sample counts, leag
 - **Phase 4: Automation / Fallback**
   Local scheduled execution first, with optional free-tier cloud worker/dashboard only if local crawling is unreliable.
 
+### Optional / Not Needed Yet
+
+| Item | Status | Why not now? | Revisit when |
+|------|--------|--------------|--------------|
+| Public API | Deferred | Rankings need to prove useful before productizing access | Rankings are credible and external consumers are clear |
+| Auth/accounts | Deferred | MVP is operator-focused and local-first | Multiple users need personalized access |
+| Historical season crawling | Deferred | Current-season scope keeps the first crawl/model loop smaller | Current-season data is too sparse or rankings need historical stability checks |
+| Active lookback-window filtering | Deferred | The config shape exists, but MVP uses current-season trades only | Historical or multi-window ranking work begins |
+| Redraft rankings | Deferred | Dynasty is the first useful format and drives pick valuation | Dynasty baseline is credible |
+| Manual trade exclusion tooling | Deferred | MVP should preserve completed trades and flag outliers first | Specific outliers demonstrably distort outputs |
+| Remote dashboard access | Optional | Not a cloud fallback trigger for MVP | Cloud fallback makes remote access cheap |
+| Complex ML ranking model | Deferred | First model should be explainable and inspectable | Simple model limitations are understood from source evidence |
+
 ---
 
 ## Functional Requirements
@@ -200,6 +213,23 @@ Acceptance Criteria:
 | Remote dashboard access | Inspect rankings from another device | Could | Nice-to-have only if cloud fallback makes it cheap |
 | Legacy review | Review `trade-winds-legacy` for reusable lessons before architecture decisions | Should | Classify findings as reuse, discard, or rethink |
 
+### Output Surfaces
+
+| Surface | Purpose | Required Content | Consumer |
+|---------|---------|------------------|----------|
+| CLI crawl output | Immediate operator feedback during collection | Run status, progress counts, errors, and resume context | John |
+| CLI ranking summary | Quick validation after ranking generation | Run timestamp, season scope, counts, and top assets | John |
+| CSV export | Sortable and shareable ranking inspection | Rank, asset name, asset type, value score, position or pick fields, confidence/sample context | John |
+| Dashboard rankings table | Human inspection of model output | Rank, asset name, value score, asset type/position, filters, confidence/sample context | John, future fantasy managers |
+| Dashboard source-trade drilldown | Explain and debug valuations | Recent or contributing trades for a selected player or pick | John |
+
+### Data Fidelity
+
+- **Source facts to preserve:** Sleeper users, leagues, league settings, completed trades, trade assets, traded draft picks, player metadata snapshots, crawl frontier state, fetched markers, and crawl/ranking run metadata.
+- **Derived data / recalculable outputs:** Ranking scores, rank order, confidence labels or metrics, outlier flags, source-trade contribution summaries, CSV files, and dashboard views.
+- **Stable identifiers:** Sleeper user IDs, league IDs, transaction IDs, roster IDs where available, player IDs, draft-pick identifiers, crawl run IDs, and ranking run IDs.
+- **Precision limits / unknowns not to invent:** Do not invent exact draft pick positions before they are known. Preserve season, round, original owner/current owner context, and exact position only when Sleeper data supports it.
+
 ---
 
 ## Non-Functional Requirements
@@ -304,6 +334,14 @@ Given two ranking runs with different run timestamps, when John runs the compari
 - [ ] John can compare ranking stability across at least two runs.
 - [ ] MVP runs locally with near-zero recurring cost.
 
+### Validation Signals
+
+- [ ] Required outputs are inspectable by John through CLI, CSV, and dashboard surfaces.
+- [ ] Rankings can be compared across repeated runs where stability matters.
+- [ ] Confidence, sample size, recency, league coverage, and provenance context are visible where needed.
+- [ ] Ranked assets can be traced back to source completed trades where needed.
+- [ ] Current-season sample size is sufficient to judge whether historical crawling should remain deferred.
+
 ### Definition of Done
 
 A feature is considered done when:
@@ -356,6 +394,15 @@ A feature is considered done when:
 | Confidence should be multidimensional | Display component metrics before collapsing into a single score |
 | A simple explainable model is enough to validate the first loop | Compare results against manager intuition, source trades, stability, and later model candidates |
 | Local-first is viable | Attempt manual and repeatable local crawls before adding cloud fallback |
+
+### Prior Art / Legacy Inputs
+
+| Artifact | What it shows | Keep / Discard / Rethink | Notes |
+|----------|---------------|--------------------------|-------|
+| `trade-winds-legacy` README | Original product idea, Sleeper crawler direction, and planned roadmap | Keep / Rethink | Preserve the accepted-trades-as-market-signal concept; re-evaluate scope through the new requirements |
+| Legacy crawler | Username-seeded Sleeper graph traversal proof of concept | Keep / Rethink | Review during Architecture before final crawler design |
+| Legacy in-memory storage | Early proof-of-concept storage only | Discard | MVP requires durable SQLite persistence and resumable state |
+| Legacy planned API/Docker/tests | Useful future direction but not implemented | Rethink | Public API and production polish remain out of MVP |
 
 ---
 
