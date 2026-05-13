@@ -26,6 +26,18 @@ A clean restart gives the project a better foundation while preserving the older
 
 ---
 
+## Later Phase Decisions
+
+Requirements and Architecture refined several Discovery-phase assumptions. These notes preserve that evolution without rewriting the original Discovery record.
+
+- MVP inspection shifted from a lightweight dashboard to CLI summaries, CSV exports, and direct query/database inspection. A minimal FastAPI adapter is optional only if it accelerates the future web/admin API path.
+- Completed trades remain the primary valuation signal. Add/drop transactions were added as baseline calibration facts for each league's rosterable-player line, replacement-level region, and practical near-zero values.
+- Add/drop interpretation should consider league size, roster size, positional limits, taxi/IR rules, player position, and the adding/dropping team's roster context.
+- MVP execution remains manual CLI-first. Scheduling, cloud fallback, and remote web access are deferred until the manual crawl/rank/export/inspect loop proves useful.
+- Future admin/control endpoints should require authentication before remote exposure, while read-only ranking/trade views can be considered separately later.
+
+---
+
 ## Project Context
 
 ### Project Type
