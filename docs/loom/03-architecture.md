@@ -61,23 +61,29 @@ The archived `trade-winds-legacy` repo should inform the new implementation, not
 | Application Services                |
 | crawl, rank, export, ranking query  |
 +---------+-----------+---------------+
-          |           |
-          v           v
-+---------+--+   +----+----------------+
-| Crawl      |   | Valuation Engine    |
-| Orchestrator|  | rankings/confidence |
-+-----+------+   +----+----------------+
+          |           |          |
+          v           v          v
++---------+--+   +----+-----+  +-------------------+
+| Crawl      |   | Valuation|  | CSV + CLI Inspect |
+| Orchestrator|  | Engine   |  +-------------------+
++-----+------+   +----+-----+
       |               |
-      v               v
-+-----+------+   +----+----------------+
-| Sleeper    |   | CSV + CLI Inspect   |
-| Client     |   +---------------------+
-+-----+------+
-      |
-      v
- Sleeper API
-      |
-      v
+      v               |
++-----+------+        |
+| Sleeper    |        |
+| Client     |        |
++-----+------+        |
+      |               |
+      v               |
+ Sleeper API          |
+                      |
+          v           v
++-------------------------------+
+| Persistence Layer             |
+| repositories, upserts, queries|
++---------------+---------------+
+                |
+                v
 +-------------------------------+
 | SQLite Database               |
 | normalized facts, crawl state,|
@@ -110,6 +116,412 @@ The archived `trade-winds-legacy` repo should inform the new implementation, not
 - Ranking services read persisted transaction facts, with completed trades as the primary valuation signal and add/drop movement used mainly to calibrate each league's rosterable-player line and the bottom of the scale; they do not call Sleeper directly.
 - The valuation engine writes ranking runs, ranking rows, confidence metrics, outlier flags, and source-trade contributions.
 - CSV export and inspection commands read persisted ranking outputs through query services.
+
+### Service Interaction Diagrams
+
+The high-level architecture should be implemented as a set of small services with clear call directions. Names can be refined during implementation, but the dependency shape should remain stable: interfaces call application services, application services coordinate domain services and repositories, and domain services do not import CLI or future web modules.
+
+#### Runtime Composition
+
+```text
+CLI command
+  |
+  v
+AppContext
+  |-- Settings
+  |-- Database session factory
+  |-- SleeperClient
+  |-- Repository bundle
+  |
+  v
+Application service
+```
+
+`AppContext` is the composition point. It wires configuration, database sessions, HTTP clients, and repositories together so commands stay thin and future FastAPI routes can reuse the same services.
+
+#### Crawl Discovery Flow
+
+```text
+Crawl CLI
+  |
+  v
+CrawlApplicationService.discover()
+  |
+  v
+CrawlOrchestrator.run_discovery()
+  |        |
+  |        +--> CrawlStateRepository
+  |        |      - create/update crawl_runs
+  |        |      - lease/update crawl_frontier items
+  |        |      - write fetched_markers
+  |        |
+  |        +--> SleeperClient
+  |        |      - get_user_by_username()
+  |        |      - get_user_leagues()
+  |        |      - get_league_users()
+  |        |      - get_league_rosters()
+  |        |
+  |        +--> SleeperFactRepository
+  |               - upsert users
+  |               - upsert leagues
+  |               - upsert league_users
+  |               - upsert rosters
+  |
+  v
+CrawlSummary
+```
+
+Discovery owns graph expansion. It should persist progress as it goes, so interruption loses as little work as practical and the next run can resume from durable frontier state.
+
+#### Transaction Sync Flow
+
+```text
+Crawl CLI
+  |
+  v
+CrawlApplicationService.sync_transactions()
+  |
+  v
+TransactionSyncService.run()
+  |        |
+  |        +--> LeagueSyncRepository
+  |        |      - read known leagues
+  |        |      - read/update league_sync_state
+  |        |
+  |        +--> SleeperClient
+  |        |      - get_league_transactions()
+  |        |      - get_traded_picks()
+  |        |
+  |        +--> TransactionNormalizer
+  |        |      - normalize transaction
+  |        |      - normalize trade sides/assets
+  |        |      - normalize add/drop movement
+  |        |
+  |        +--> TransactionRepository
+  |               - upsert raw transactions
+  |               - upsert transaction_assets
+  |               - upsert trade_sides
+  |               - upsert trade_assets
+  |
+  v
+TransactionSyncSummary
+```
+
+Transaction sync should store facts, not valuation opinions. Completed trades, add/drop movement, picks, and raw payloads are preserved so future model versions can reinterpret the same source material.
+
+#### Ranking Flow
+
+```text
+Rank CLI
+  |
+  v
+RankingApplicationService.generate()
+  |
+  v
+ValuationEngine.score()
+  |        |
+  |        +--> RankingInputRepository
+  |        |      - load completed trade sides/assets
+  |        |      - load add/drop baseline facts
+  |        |      - load league/player/pick context
+  |        |
+  |        +--> ValuationModel
+  |        |      - calculate asset scores
+  |        |      - calculate confidence metrics
+  |        |      - identify outlier signals
+  |        |
+  |        +--> RankingOutputRepository
+  |               - create ranking_runs
+  |               - write ranking_assets
+  |               - write ranking_evidence
+  |
+  v
+RankingSummary
+```
+
+`ValuationModel` is the replaceable algorithm boundary. It receives normalized facts and configuration, then returns scores, confidence fields, and evidence. Different model versions should be able to read the same persisted facts and write separate ranking runs.
+
+#### Export and Inspection Flow
+
+```text
+Export / Inspect CLI
+  |
+  v
+InspectionApplicationService
+  |        |
+  |        +--> RankingQueryService
+  |        |      - list ranking runs
+  |        |      - list/filter ranking assets
+  |        |      - fetch asset evidence
+  |        |      - compare ranking runs
+  |        |
+  |        +--> CsvExporter
+  |               - write stable ranking CSV
+  |
+  v
+Terminal table / CSV file
+```
+
+Inspection services should be read-oriented. They can format terminal output and CSV files, but they should not own crawl, normalization, or scoring behavior.
+
+### Initial Service and Class Map
+
+This is a starting map for implementation, not a promise that every class name must survive unchanged. If code reveals better names, update this architecture note and the planning ownership map together.
+
+| Module Area | Primary Classes / Services | Role |
+|-------------|----------------------------|------|
+| `config` | `Settings`, `CrawlLimits`, `RateLimitSettings`, `OutputSettings` | Load operator config, default limits, paths, and request behavior |
+| `app` | `AppContext`, `ServiceFactory` | Compose settings, database sessions, clients, repositories, and application services |
+| `cli` | Typer command modules | Parse options, call application services, render concise output |
+| `sleeper` | `SleeperClient`, `RateLimiter`, `RetryPolicy`, boundary Pydantic models | Fetch Sleeper API data with polite request behavior and typed boundaries |
+| `db` | SQLAlchemy models, `SessionFactory`, Alembic migrations | Define database schema and migration path |
+| `repositories` | `CrawlStateRepository`, `SleeperFactRepository`, `TransactionRepository`, `RankingInputRepository`, `RankingOutputRepository`, `RankingQueryRepository` | Isolate SQL/database access from domain services |
+| `crawl` | `CrawlApplicationService`, `CrawlOrchestrator`, `TransactionSyncService`, `FrontierService` | Coordinate discovery and transaction sync workflows |
+| `transactions` | `TransactionNormalizer`, `TradeSideBuilder`, `AssetKeyFactory` | Convert raw Sleeper transactions into normalized facts and stable asset identities |
+| `valuation` | `RankingApplicationService`, `ValuationEngine`, `ValuationModel`, `ConfidenceCalculator`, `OutlierDetector` | Generate versioned ranking runs from persisted facts |
+| `inspection` | `InspectionApplicationService`, `RankingQueryService`, `RunComparisonService` | Read ranking outputs, evidence, and run metadata for CLI/query inspection |
+| `exports` | `CsvExporter` | Write stable CSV outputs from persisted ranking data |
+
+### Component Internal Contracts
+
+The next phase should turn these into explicit contracts and tests. This section is intentionally more detailed than the box diagram: it describes what each component owns, what it receives, what it returns, and what behavior should be protected by tests.
+
+#### Configuration and App Context
+
+| Item | Detail |
+|------|--------|
+| Owns | Operator settings, environment/default resolution, local paths, service composition |
+| Key classes | `Settings`, `CrawlLimits`, `RateLimitSettings`, `OutputSettings`, `AppContext`, `ServiceFactory` |
+| Inputs | Environment variables, optional ignored local config, CLI option overrides |
+| Outputs | Validated settings, database session factory, configured `SleeperClient`, repository bundle, application services |
+| Must not do | Fetch Sleeper data, write domain rows, run ranking logic |
+| Contract tests | Missing seed username produces clear error; default paths resolve into ignored local directories; CLI overrides take precedence over defaults; `AppContext` can construct services without side effects beyond opening configured resources |
+
+Expected configuration keys include:
+
+```text
+TRADE_WINDS_SEED_USERNAME
+TRADE_WINDS_SEASON
+TRADE_WINDS_DB_PATH
+TRADE_WINDS_OUTPUT_DIR
+TRADE_WINDS_REQUESTS_PER_SECOND
+TRADE_WINDS_MAX_USERS
+TRADE_WINDS_MAX_LEAGUES
+TRADE_WINDS_MAX_API_CALLS
+TRADE_WINDS_MAX_RUNTIME_SECONDS
+```
+
+#### CLI
+
+| Item | Detail |
+|------|--------|
+| Owns | Command names, option parsing, terminal rendering, process exit codes |
+| Key modules | `cli.main`, `cli.crawl`, `cli.rank`, `cli.export`, `cli.inspect` |
+| Inputs | User command/options and environment |
+| Outputs | Human-readable summaries, CSV files through exporter service, non-zero exit codes for command failures |
+| Must not do | Import SQLAlchemy models directly for business behavior, call Sleeper directly, contain ranking math |
+| Contract tests | `trade-winds --help` renders; missing config exits clearly; each command calls the expected application service; output includes run IDs/counts where relevant |
+
+Initial command shape:
+
+```text
+trade-winds crawl discover
+trade-winds crawl transactions
+trade-winds rank
+trade-winds export rankings
+trade-winds inspect runs
+trade-winds inspect rankings
+trade-winds inspect asset <asset_key>
+trade-winds inspect compare
+```
+
+#### Sleeper Client
+
+| Item | Detail |
+|------|--------|
+| Owns | Sleeper HTTP transport, endpoint paths, request pacing, retries/backoff, response parsing at API boundary |
+| Key classes | `SleeperClient`, `RateLimiter`, `RetryPolicy`, endpoint response models |
+| Inputs | Endpoint parameters such as username, user ID, league ID, season, transaction round/page where applicable |
+| Outputs | API result objects that include parsed fields plus original raw JSON payloads |
+| Must not do | Write to SQLite, decide crawl frontier, normalize transactions into project tables, assign values |
+| Contract tests | Endpoint URL construction; retry/backoff on transient failures; rate limiter is invoked; malformed/partial payloads preserve raw JSON; 404/user-not-found maps to a controlled error |
+
+Initial endpoint methods:
+
+```text
+get_user_by_username(username)
+get_user_leagues(user_id, season)
+get_league_users(league_id)
+get_league_rosters(league_id)
+get_league_transactions(league_id, season)
+get_traded_picks(league_id)
+get_players()
+```
+
+#### Persistence and Repositories
+
+| Item | Detail |
+|------|--------|
+| Owns | SQLite schema, migrations, SQLAlchemy sessions, database-specific query/upsert behavior |
+| Key classes | SQLAlchemy models, `SessionFactory`, repository classes |
+| Inputs | Normalized facts, raw payload JSON, run metadata, ranking outputs |
+| Outputs | Persisted rows, query DTOs/read models, idempotent upsert results |
+| Must not do | Make HTTP requests, parse CLI options, contain valuation algorithms |
+| Contract tests | Fresh migration creates all tables; primary keys prevent duplicate facts; upserts update `last_seen_at`/state without duplicating; query methods return deterministic read models |
+
+Repository split:
+
+| Repository | Owns |
+|------------|------|
+| `CrawlStateRepository` | `crawl_runs`, `crawl_frontier`, `fetched_markers` |
+| `SleeperFactRepository` | `users`, `leagues`, `league_users`, `rosters`, `players` |
+| `LeagueSyncRepository` | known league selection and `league_sync_state` |
+| `TransactionRepository` | `transactions`, `transaction_assets`, `trade_sides`, `trade_assets` |
+| `RankingInputRepository` | read-only model inputs from persisted facts |
+| `RankingOutputRepository` | `ranking_runs`, `ranking_assets`, `ranking_evidence` writes |
+| `RankingQueryRepository` | inspection/read queries over ranking outputs and evidence |
+
+#### Crawl Application and Orchestration
+
+| Item | Detail |
+|------|--------|
+| Owns | Workflow-level discovery and transaction sync coordination |
+| Key classes | `CrawlApplicationService`, `CrawlOrchestrator`, `TransactionSyncService`, `FrontierService` |
+| Inputs | Settings, crawl limits, seed username, repositories, `SleeperClient`, active season |
+| Outputs | `CrawlSummary`, `TransactionSyncSummary`, persisted crawl state/facts |
+| Must not do | Calculate rankings, format CSVs, expose web routes |
+| Contract tests | Discovery seeds frontier from username; limits stop expansion; already-fetched markers prevent redundant fetches; interrupted/in-progress frontier items can be retried; run counts/errors are recorded |
+
+Discovery service responsibilities:
+
+```text
+1. Start crawl_run.
+2. Resolve seed username to Sleeper user.
+3. Enqueue seed user and discovered leagues/users.
+4. Lease pending frontier items.
+5. Fetch league users and rosters.
+6. Upsert facts and fetched markers.
+7. Stop on configured limits.
+8. Finish run with counts/errors.
+```
+
+Transaction sync responsibilities:
+
+```text
+1. Start transaction_sync crawl_run.
+2. Select known leagues for active season.
+3. Read league_sync_state.
+4. Fetch current-season transactions and traded picks.
+5. Normalize transaction facts.
+6. Upsert transaction rows/assets/trade projections.
+7. Update league high-watermark state.
+8. Finish run with counts/errors.
+```
+
+#### Transaction Normalization
+
+| Item | Detail |
+|------|--------|
+| Owns | Conversion from raw Sleeper transaction payloads to normalized, model-ready facts |
+| Key classes | `TransactionNormalizer`, `TradeSideBuilder`, `AssetKeyFactory` |
+| Inputs | Raw transaction payload, league ID/season, league roster/user context, traded-pick payloads where needed |
+| Outputs | Transaction fact DTO, generic transaction asset DTOs, trade side DTOs, trade asset DTOs, stable asset keys |
+| Must not do | Fetch API data, write directly to SQLite, infer value/rank |
+| Contract tests | Completed trade with players creates correct sides/assets; trade with picks preserves season/round/original owner/current owner and nullable exact position; add/drop creates added/dropped movement; strange but complete trades are preserved rather than discarded |
+
+Asset key convention should be stable before valuation/export work starts:
+
+```text
+player:<sleeper_player_id>
+pick:<season>:<round>:<original_roster_id>
+pick:<season>:<round>:<original_roster_id>:<pick_position>  # only when exact pick is known
+```
+
+The normalizer stores movement facts without interpreting them:
+
+```text
+added
+dropped
+traded_away
+traded_for
+draft_pick
+```
+
+#### Valuation and Ranking
+
+| Item | Detail |
+|------|--------|
+| Owns | Interpretation of persisted market facts into ranking outputs |
+| Key classes | `RankingApplicationService`, `ValuationEngine`, `ValuationModel`, `ConfidenceCalculator`, `OutlierDetector` |
+| Inputs | Completed trade sides/assets, add/drop baseline facts, player metadata, league context, ranking config |
+| Outputs | Versioned ranking run, ranked assets, value scores, confidence metrics, outlier indicators, source evidence |
+| Must not do | Call Sleeper, mutate raw transaction facts, require external ranking priors in MVP |
+| Contract tests | Ranking reads persisted facts only; two model versions can write separate ranking runs; scores are deterministic for the same input/config; evidence rows trace ranked assets back to source trades |
+
+Replaceable model boundary:
+
+```text
+ValuationModel.score(input: RankingInput, config: RankingConfig) -> RankingResult
+```
+
+Where:
+
+```text
+RankingInput
+  completed_trades
+  trade_sides
+  trade_assets
+  add_drop_facts
+  league_context
+  player_metadata
+
+RankingResult
+  model_version
+  config
+  assets[]
+  evidence[]
+  summary_counts
+```
+
+#### Export and Inspection
+
+| Item | Detail |
+|------|--------|
+| Owns | Human inspection of persisted ranking outputs |
+| Key classes | `InspectionApplicationService`, `RankingQueryService`, `RunComparisonService`, `CsvExporter` |
+| Inputs | Ranking run ID or `latest`, asset key filters, asset type/position filters, output path |
+| Outputs | Terminal tables/summaries, CSV files, run comparison rows |
+| Must not do | Generate new rankings implicitly, call Sleeper, mutate source facts |
+| Contract tests | CSV has stable columns; ranking filters are deterministic; asset inspection returns evidence; compare highlights movement between two runs |
+
+Initial CSV columns:
+
+```text
+ranking_run_id
+model_version
+rank
+asset_key
+asset_kind
+display_name
+position
+value_score
+confidence_label
+sample_count
+league_count
+recency_weight_sum
+direct_signal_count
+outlier_signal_count
+```
+
+### Dependency Rules
+
+- CLI modules may import application services; application services must not import CLI modules.
+- Future FastAPI modules may import the same application/query services; domain services must not import FastAPI modules.
+- Sleeper client modules must not write to the database directly.
+- Repositories may know SQLAlchemy details; domain services should depend on repository methods rather than direct SQL queries where practical.
+- Transaction normalization may read raw Sleeper payloads and league context, but it should not assign player values.
+- Valuation models may read normalized facts and write ranking outputs, but they should not call Sleeper.
+- Export and inspection services should read persisted outputs and evidence; they should not trigger crawls or ranking generation implicitly.
 
 ### Initial CLI Commands
 
