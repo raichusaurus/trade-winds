@@ -48,6 +48,7 @@ The plan intentionally excludes a primary dashboard, public API, auth/account sy
 | Valuation Engine | Generate explainable rankings from persisted facts | Codex | Model v1, recency weighting, add/drop baseline hooks, confidence metrics, outlier indicators, ranking run persistence | Completed trades are primary; add/drops are conservative baseline signals |
 | Export & Inspection | Make outputs inspectable without a dashboard | Codex | CSV export, CLI summaries, ranking inspection, source evidence inspection, run comparison | This is the main MVP validation surface |
 | Tests & Contracts | Lock behavior around API parsing, schema, crawl resumability, and ranking output | Codex | Unit tests, fixture payloads, CLI smoke tests, database migration checks | Formalized in next Loom phase, but planned here for sequencing |
+| CI/CD Bootstrap | Make local checks reproducible in GitHub Actions | Codex | GitHub Actions workflow, `uv.lock`, required checks, non-live test policy | Separate bootstrap slice before merge-gated implementation |
 | Optional Web/API Adapter | Preserve or add a thin future API path | Codex | FastAPI adapter only if needed, localhost-only defaults, routes over existing services | Not required for MVP delivery |
 
 ### Implementation Slices
@@ -57,7 +58,9 @@ The plan intentionally excludes a primary dashboard, public API, auth/account sy
 | S0: Scaffold | Repo can install/run a `trade-winds` CLI with help output | None | Must |
 | S1: Config & App Context | CLI resolves local config, database path, season, seed username, request rate, and crawl limits | S0 | Must |
 | S1.5: Service Boundaries | Initial modules match the architecture service/class map and dependency rules | S0, S1 | Must |
-| S2: Database Foundation | Alembic migrations create core tables and repositories can open SQLite sessions | S0, S1 | Must |
+| S1.75: Schema Contract Lock | Architecture and tests define exact initial tables, constraints, repository responsibilities, and idempotency keys | S0, S1.5 | Must |
+| S1.9: CI Bootstrap | GitHub Actions workflow, locked dependencies, local command parity, and documented required checks exist | S0, S1.75 | Must before merge-gated implementation |
+| S2: Database Foundation | Alembic migrations create core tables and repositories can open SQLite sessions | S0, S1, S1.75, S1.9 | Must |
 | S3: Sleeper Client | Client can fetch seed user, leagues, league users, rosters, transactions, traded picks, and player metadata with retries/rate limiting | S1 | Must |
 | S4: Discovery Crawl | `crawl discover` persists users, leagues, league users, rosters, frontier state, fetched markers, and crawl run metadata | S2, S3 | Must |
 | S5: Transaction Sync | `crawl transactions` persists current-season transactions, add/drop movement, trade sides/assets, draft picks, league sync state, and raw payloads | S2, S3, S4 | Must |
@@ -104,14 +107,16 @@ The plan intentionally excludes a primary dashboard, public API, auth/account sy
 
 1. Project scaffold and config.
 2. Service boundaries and `AppContext`.
-3. Database foundation and migrations.
-4. Sleeper client.
-5. Discovery crawl.
-6. Transaction sync and normalization.
-7. Ranking engine.
-8. CSV export and CLI inspection.
-9. Stability comparison.
-10. Optional FastAPI/web adapter.
+3. Schema contract lock.
+4. CI bootstrap.
+5. Database foundation and migrations.
+6. Sleeper client.
+7. Discovery crawl.
+8. Transaction sync and normalization.
+9. Ranking engine.
+10. CSV export and CLI inspection.
+11. Stability comparison.
+12. Optional FastAPI/web adapter.
 
 ### Critical Path
 
@@ -120,11 +125,13 @@ The critical path is persistence-backed crawling into persisted transaction fact
 The first implementation should therefore focus on:
 
 1. A runnable CLI and local config.
-2. A durable SQLite schema.
-3. A Sleeper client with conservative request behavior.
-4. Discovery plus transaction sync with resumable state.
-5. Ranking from persisted data only.
-6. CSV/CLI inspection.
+2. A locked initial SQLite schema contract.
+3. A CI workflow that can run the same local checks.
+4. A durable SQLite schema that satisfies that contract.
+5. A Sleeper client with conservative request behavior.
+6. Discovery plus transaction sync with resumable state.
+7. Ranking from persisted data only.
+8. CSV/CLI inspection.
 
 ### Parallel Work
 
@@ -152,17 +159,29 @@ The first implementation should therefore focus on:
 - **Expected output:** Runnable `trade-winds --help`, config loading, ignored local data/output directories.
 - **Handoff notes required:** Setup commands, config keys, command entry points, any dependency choices.
 
+### Context Packet: CI Bootstrap
+
+- **Owner:** Codex
+- **Goal:** Make the local TDD checks reproducible in GitHub Actions before implementation branches rely on them.
+- **Relevant requirements:** Tests/contracts-first workflow; local-first MVP; no hosted deployment required.
+- **Relevant architecture decisions:** `uv` project workflow, pytest, Ruff, optional type checking, Alembic migration checks.
+- **Owned files/services/modules:** `.github/workflows/ci.yml`, `pyproject.toml`, `uv.lock`, CI notes in `docs/loom/05-contracts-tests-cicd.md`.
+- **Contracts to preserve:** CI must not call live Sleeper APIs by default; CI commands must match documented local commands; red tests are allowed during contract-writing work but required checks become enforced once the first implementation slice is expected to pass.
+- **Risks and assumptions:** Enforcing CI too early can block intentional red-test commits; delaying CI too long can let local-only assumptions creep in.
+- **Expected output:** A CI workflow that installs Python, installs `uv`, runs lockfile/dependency checks, Ruff format/lint, pytest, coverage after package scaffold, and migration checks after Alembic exists.
+- **Handoff notes required:** Required checks, when each check becomes blocking, secrets policy for live smoke tests, and any skipped checks.
+
 ### Context Packet: Persistence & Schema
 
 - **Owner:** Codex
-- **Goal:** Implement durable SQLite storage for crawl state, facts, and ranking outputs.
+- **Goal:** Lock and implement durable SQLite storage for crawl state, facts, and ranking outputs.
 - **Relevant requirements:** SQLite persistence, resumable crawl, raw fact preservation, ranking run storage.
 - **Relevant architecture decisions:** SQLAlchemy 2.x, Alembic, normalized facts plus JSON raw snapshots.
 - **Owned files/services/modules:** Database models, migrations, session helpers, repositories.
-- **Contracts to preserve:** Stable Sleeper IDs, idempotent upserts, nullable precision for unknown draft pick positions.
+- **Contracts to preserve:** Stable Sleeper IDs, idempotent upserts, nullable precision for unknown draft pick positions, raw payload columns, ranking run reproducibility, explicit crawl state transitions.
 - **Risks and assumptions:** Over-modeling early can slow implementation; under-modeling can make ranking queries painful.
-- **Expected output:** Initial migration and repository helpers for users, leagues, rosters, transactions, crawl state, rankings.
-- **Handoff notes required:** Table names, primary keys, migration commands, known schema compromises.
+- **Expected output:** Executable schema contract test, initial migration, repository helpers for users, leagues, rosters, transactions, crawl state, rankings.
+- **Handoff notes required:** Table names, primary keys, uniqueness/idempotency constraints, migration commands, known schema compromises.
 
 ### Context Packet: Sleeper Client
 
@@ -222,7 +241,9 @@ The first implementation should therefore focus on:
 |------------|---------|-------------------|-------|
 | C0: CLI Boot | Confirm the app shell is runnable | `trade-winds --help` works; config errors are readable | Project Foundation |
 | C0.5: Boundary Map | Confirm implementation follows architecture diagrams | `AppContext`, application service, repository, client, and domain module dependencies match the service/class map | Service Boundary Design |
-| C1: Schema Ready | Confirm durable storage can be created and migrated | Fresh SQLite database migrates successfully; core tables exist | Persistence |
+| C0.75: Schema Contract Locked | Confirm previous phases provide enough persistence detail for TDD | `docs/loom/03-architecture.md` names tables, keys, JSON columns, and idempotency constraints; `tests/contracts/test_database_schema_contract.py` exists and fails until implemented | Persistence/Tests |
+| C0.9: CI Bootstrap Ready | Confirm CI can reproduce local checks | `.github/workflows/ci.yml` exists, `uv.lock` exists, CI avoids live Sleeper calls by default, and required checks are documented | Project Foundation/Tests |
+| C1: Schema Ready | Confirm durable storage can be created and migrated | Fresh SQLite database migrates successfully; core tables, keys, constraints, and raw JSON columns satisfy the schema contract | Persistence |
 | C2: API Smoke | Confirm Sleeper calls work against a configured seed | Seed user and at least one league can be fetched with throttling | Sleeper Client |
 | C3: Discovery Resume | Confirm graph discovery is durable | Discovery run persists users/leagues/frontier and can resume without duplicating rows | Crawl |
 | C4: Transaction Facts | Confirm completed trades and add/drops are stored | Known league transaction payloads produce normalized transactions/assets/trade sides | Crawl/Normalization |
@@ -263,15 +284,17 @@ Stop and ask for direction if:
 ### Initial Sequential Plan
 
 1. Scaffold Python package, Typer CLI, config loader, and ignored local paths.
-2. Add SQLAlchemy/Alembic and create the initial schema.
-3. Implement Sleeper client with throttling/retries and endpoint smoke tests.
-4. Build `crawl discover` with persisted frontier, run metadata, users, leagues, league users, and rosters.
-5. Build `crawl transactions` with league sync state, transaction normalization, completed trades, add/drop assets, and draft-pick handling.
-6. Implement model v1 as a simple, explainable ranking service over persisted trade facts.
-7. Persist ranking runs, ranking assets, and ranking evidence.
-8. Add CSV export and concise CLI ranking summary.
-9. Add inspection commands for rankings, run metadata, source evidence, and movement comparison.
-10. Use real crawl/ranking outputs to decide whether to deepen valuation, add tests, or introduce optional FastAPI.
+2. Lock the initial schema contract in architecture and executable tests.
+3. Bootstrap CI/CD with non-live checks and dependency lockfile once the scaffold can install.
+4. Add SQLAlchemy/Alembic and create the initial schema.
+5. Implement Sleeper client with throttling/retries and endpoint smoke tests.
+6. Build `crawl discover` with persisted frontier, run metadata, users, leagues, league users, and rosters.
+7. Build `crawl transactions` with league sync state, transaction normalization, completed trades, add/drop assets, and draft-pick handling.
+8. Implement model v1 as a simple, explainable ranking service over persisted trade facts.
+9. Persist ranking runs, ranking assets, and ranking evidence.
+10. Add CSV export and concise CLI ranking summary.
+11. Add inspection commands for rankings, run metadata, source evidence, and movement comparison.
+12. Use real crawl/ranking outputs to decide whether to deepen valuation, add tests, or introduce optional FastAPI.
 
 ### Later Agile Cycles
 
@@ -291,11 +314,13 @@ After the first full crawl/rank/export/inspect loop works, iterate in small vali
 
 - **Ready to move to Contracts & Tests / CI/CD?** [x] Yes [ ] No
 - **Remaining concerns:**
-  - The baseline valuation algorithm still needs a concrete contract and fixture-driven expected outputs.
-  - Sleeper transaction payload edge cases need representative fixtures.
+  - The baseline valuation algorithm still needs a concrete contract and fixture-driven expected outputs before valuation implementation.
+  - Sleeper transaction payload edge cases need representative fixtures before transaction-normalization implementation.
   - The project scaffold and dependency manager choice should be made before test/CI commands are finalized.
-  - CSV columns and CLI inspection command names should be treated as contracts once implementation begins.
-- **Owner decision:** Proceed to Contracts & Tests / CI/CD planning, then implementation, while allowing model details to be refined through fixture-backed contracts.
+  - CSV columns and CLI inspection command names should be treated as contracts before export/inspection implementation.
+  - Initial schema details must be locked in architecture and executable schema tests before database implementation.
+  - CI/CD is not set up yet; it should become its own bootstrap slice after package scaffold and lockfile generation, before merge-gated implementation work.
+- **Owner decision:** Proceed to Contracts & Tests / CI/CD planning, but do not start database/crawl/ranking implementation until missing schema, repository, endpoint, valuation, and CI bootstrap contracts are converted into failing tests or documented checks.
 
 ---
 

@@ -1,0 +1,20 @@
+{
+  "4046": {
+    "player_id": "4046",
+    "full_name": "Bijan Robinson",
+    "position": "RB",
+    "team": "ATL"
+  },
+  "7564": {
+    "player_id": "7564",
+    "full_name": "CeeDee Lamb",
+    "position": "WR",
+    "team": "DAL"
+  },
+  "9999": {
+    "player_id": "9999",
+    "full_name": "Test Quarterback",
+    "position": "QB",
+    "team": "FA"
+  }
+}
