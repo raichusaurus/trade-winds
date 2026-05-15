@@ -10,6 +10,14 @@ Design the Trade Winds MVP system architecture.
 
 ## Overview
 
+### Inputs From Requirements
+
+- **MVP scope:** Local-first Python CLI that starts from a configured Sleeper username, crawls current-season Sleeper users/leagues/transactions, persists normalized facts and raw payloads in SQLite, generates dynasty rankings from completed trades, and exposes outputs through CLI, CSV, and direct queries.
+- **Key acceptance criteria:** Config-driven crawl, resumable frontier, persisted completed trades and add/drop movement, rankings from persisted facts only, stable CSV output, CLI/query inspection, ranking evidence, and run comparison.
+- **Non-functional constraints:** Near-zero cost, local-first operation, polite Sleeper API usage, durable resumability, explainable model behavior, and reusable service boundaries for a future web/admin API.
+- **Architecture inputs / open decisions:** Use Python 3.12+, Typer, SQLite, SQLAlchemy/Alembic, `httpx`, Pydantic at API boundaries, and an explainable model v1. Keep FastAPI, scheduling, cloud fallback, and historical seasons deferred.
+- **Optional or deferred work to avoid for now:** Public API, auth/accounts, dashboard-first UI, paid hosting, production scheduling, complex ML, redraft rankings, full historical crawl, and manual trade exclusion tooling.
+
 ### Problem
 
 Trade Winds needs a local-first system that can start from a configured Sleeper username, crawl the current-season Sleeper user-league graph, persist completed trade facts, and generate dynasty-oriented player and draft-pick rankings from those accepted trades.
@@ -1135,6 +1143,19 @@ No IaC for MVP. If scheduled execution or free-tier cloud fallback becomes neces
 | Web/admin inspection surface | Defer implementation; likely expose crawl start/status, ranking run, ranking read, evidence read, and export download first | CLI/query workflows are validated |
 | FastAPI/admin activation trigger | Defer routes until CLI/query services are stable | Need remote control, authenticated admin workflows, or real web-app integration |
 | Cloud fallback platform | Defer | Local crawling proves unreliable |
+
+---
+
+## Planning Inputs
+
+- **Components / modules to build:** `config`, `app`, `cli`, `sleeper`, `db`, `repositories`, `crawl`, `transactions`, `valuation`, `inspection`, `exports`, and test-support modules.
+- **Likely workstreams:** Project foundation, service boundary design, persistence/schema, Sleeper client, crawl orchestration, transaction normalization, valuation, export/inspection, contracts/tests, and CI bootstrap.
+- **Critical sequencing constraints:** Scaffold/config before app context; schema contract before database implementation; database before crawl/ranking persistence; Sleeper client before live crawl; normalized transaction facts before ranking; ranking outputs before export/inspection.
+- **Parallelization opportunities:** Sleeper client tests and persistence schema work can proceed after config shape is known; valuation fixture design can proceed once asset identity is locked; export/inspection can proceed once ranking output schema is stable.
+- **Contracts, schemas, or interfaces needing tests:** Settings/app context, CLI commands/options, Sleeper endpoint methods, rate limiter/retry policy, schema constraints, repository upserts/queries, crawl frontier/fetched markers, transaction normalizer, asset keys, valuation model/confidence/outliers, ranking query/export surfaces, and full fixture workflow.
+- **Service/module boundaries to preserve:** CLI calls application services; services coordinate repositories/domain clients; Sleeper client does not write to DB; repositories own SQLAlchemy details; valuation does not call Sleeper; export/inspection read persisted outputs.
+- **Highest-risk areas to isolate early:** SQLite schema/idempotency, Sleeper payload variance, draft-pick representation, add/drop baseline interpretation, valuation explainability, and crawl resumability.
+- **Decisions Planning must not reopen without new evidence:** Local-first MVP, CLI/CSV/query inspection first, FastAPI deferred, current-season scope, completed trades as primary ranking signal, add/drops as conservative baseline signals, raw-plus-normalized persistence, and replaceable valuation boundary.
 
 ---
 

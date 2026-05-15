@@ -13,6 +13,8 @@ Define how Trade Winds will be verified before implementation begins.
 - Requirements document: `docs/loom/02-requirements.md`
 - Architecture document: `docs/loom/03-architecture.md`
 - Planning & Decomposition document: `docs/loom/04-planning.md`
+- Architecture component/internal contracts: `docs/loom/03-architecture.md#component-internal-contracts`
+- Planning contract/test candidates: `docs/loom/04-planning.md#contract--test-candidates`
 
 ---
 
@@ -193,6 +195,20 @@ Every production class must have a test file that covers its public behavior bef
 | CSV exporter | Stable columns, deterministic ordering, safe overwrite behavior |
 | CLI renderers | Concise summaries, useful errors, no raw stack traces for expected failures |
 
+### CLI / UI / Workflow Contracts
+
+| Surface | Contract | Required Evidence |
+|---------|----------|-------------------|
+| `trade-winds --help` | Renders primary command groups without requiring config | `tests/cli/test_config_errors.py` |
+| `trade-winds crawl discover` | Loads config, accepts crawl/rate limits, calls crawl discovery service, reports missing seed username clearly | `tests/cli/test_config_errors.py`, `tests/cli/test_command_options.py` |
+| `trade-winds crawl transactions` | Reads known leagues and syncs transactions through crawl application service | `tests/integration/test_transaction_sync_persistence.py`; add command-specific CLI test during implementation |
+| `trade-winds rank` | Generates persisted ranking run from persisted facts only; accepts model version/run label | `tests/integration/test_ranking_generation.py`, `tests/cli/test_command_options.py` |
+| `trade-winds export rankings` | Writes stable ranking CSV columns from persisted ranking run | `tests/cli/test_export_rankings.py` |
+| `trade-winds inspect rankings` | Reads persisted ranking rows and supports asset type/position filters | `tests/cli/test_inspect_commands.py` |
+| `trade-winds inspect asset <asset_key>` | Shows asset ranking context and source evidence | `tests/cli/test_inspect_commands.py` |
+| `trade-winds inspect compare` | Requires two run IDs and compares rank/value movement | `tests/cli/test_command_options.py`, `tests/integration/test_ranking_comparison.py` |
+| Fixture workflow | Discover, sync, rank, export, and inspect complete without live Sleeper calls | `tests/integration/test_full_fixture_workflow.py` |
+
 ---
 
 ## Data Contracts
@@ -349,9 +365,14 @@ Fixtures are source examples, not golden implementation outputs. Golden files ma
 
 ---
 
-## CI/CD
+## Check Automation Handoff
 
 ### Current Status
+
+- **Runnable scaffold exists?** [ ] Yes [x] No
+- **Dependency lockfile exists?** [ ] Yes [x] No
+- **Tests currently expected to pass?** [ ] Yes [x] No
+- **CI/check workflow exists?** [ ] Yes [x] No
 
 CI/CD is **not set up yet**. This is intentional for the current moment because:
 
@@ -362,7 +383,7 @@ CI/CD is **not set up yet**. This is intentional for the current moment because:
 
 CI/CD should become a dedicated bootstrap slice after S0/S1/S1.75 and before merge-gated implementation work. In the planning document this is `S1.9: CI Bootstrap`.
 
-### CI Bootstrap Plan
+### Automation Bootstrap Plan
 
 Add `.github/workflows/ci.yml` when the package scaffold can install with `uv` and the lockfile exists.
 
@@ -435,7 +456,7 @@ TRADE_WINDS_LIVE_SLEEPER=1 uv run pytest tests/live
 
 Live tests must be skipped by default unless `TRADE_WINDS_LIVE_SLEEPER=1` is set and required config is present.
 
-### Deployment Strategy
+### Deployment / Release Automation
 
 MVP has no hosted deployment. CI gates local package quality and protects the TDD loop. Release artifacts are local CLI commands, SQLite databases under ignored local paths, and CSV outputs.
 
@@ -474,6 +495,13 @@ No hosted alerts are required for MVP. Observability is local logs, CLI summarie
 
 - [ ] Yes
 - [x] No
+
+### Template Gate Checks
+
+- **Required tests/contracts identified?** [x] Yes
+- **Automation/bootstrap handoff captured?** [x] Yes
+- **Contract stability and rewrite approval policy captured?** [x] Yes
+- **Known intentionally red tests documented?** [x] Yes
 
 ### Before Implementation Starts
 
