@@ -21,15 +21,34 @@ The plan intentionally excludes a primary dashboard, public API, auth/account sy
 - Discovery document: `docs/loom/01-discovery.md`
 - Requirements document: `docs/loom/02-requirements.md`
 - Architecture document: `docs/loom/03-architecture.md`
-- Decisions made:
-  - Use `uv` with `pyproject.toml` for Python project, dependency, virtual environment, lockfile, and command execution workflow.
-  - Keep valuation algorithms interchangeable: crawlers and normalizers store stable facts, ranking runs record model/config metadata, and future models should be able to read the same persisted facts without recrawling or rewriting storage.
-  - Start with a simple, explainable model v1 rather than a complex solver, as long as the model boundary remains replaceable.
-  - Defer FastAPI for MVP implementation. Preserve application/query service boundaries so a local admin/read API can be added later without rewriting crawler, ranking, export, or inspection logic.
-  - Use an MVP inspection surface of `inspect runs`, `inspect rankings`, `inspect asset`, `inspect compare`, and `export rankings`.
-  - Start with single-process synchronous crawling and a shared rate limiter. Add bounded async fetching later only if measured crawl speed becomes an MVP bottleneck.
-- Open decisions:
-  - None for MVP planning. Remaining details should be specified as contracts/tests or implementation notes.
+- Architecture planning inputs: `docs/loom/03-architecture.md#planning-inputs`
+
+### Decisions Made
+
+- Use `uv` with `pyproject.toml` for Python project, dependency, virtual environment, lockfile, and command execution workflow.
+- Keep valuation algorithms interchangeable: crawlers and normalizers store stable facts, ranking runs record model/config metadata, and future models should be able to read the same persisted facts without recrawling or rewriting storage.
+- Start with a simple, explainable model v1 rather than a complex solver, as long as the model boundary remains replaceable.
+- Defer FastAPI for MVP implementation. Preserve application/query service boundaries so a local admin/read API can be added later without rewriting crawler, ranking, export, or inspection logic.
+- Use an MVP inspection surface of `inspect runs`, `inspect rankings`, `inspect asset`, `inspect compare`, and `export rankings`.
+- Start with single-process synchronous crawling and a shared rate limiter. Add bounded async fetching later only if measured crawl speed becomes an MVP bottleneck.
+
+### Open Decisions
+
+- Type checker choice remains open for CI bootstrap: Pyright versus mypy.
+- `pytest-httpx` versus `respx` remains open until Sleeper client implementation.
+- CI blocking promotion timing remains open until the first implementation slice makes the intentionally red suite collect and pass.
+- Real Sleeper payload edge cases may require new fixtures, but existing test rewrites require explicit approval under `docs/loom/05-contracts-tests-cicd.md`.
+
+### Architecture Handoff Summary
+
+- **Components / modules to build:** `config`, `app`, `cli`, `sleeper`, `db`, `repositories`, `crawl`, `transactions`, `valuation`, `inspection`, `exports`, and test-support modules.
+- **Likely workstreams:** Project foundation, service boundary design, persistence/schema, Sleeper client, crawl orchestration, transaction normalization, valuation, export/inspection, tests/contracts, and CI/CD bootstrap.
+- **Critical sequencing constraints:** Scaffold/config before app context; schema contract before database implementation; database before crawl/ranking persistence; Sleeper client before live crawl; transaction facts before ranking; ranking outputs before export/inspection.
+- **Parallelization opportunities:** Sleeper client contracts and persistence contracts can be refined independently; valuation fixture design can proceed once asset identity is locked; export/inspection contracts can proceed once ranking output schema is stable.
+- **Contracts, schemas, or interfaces needing tests:** Settings/app context, CLI commands/options, Sleeper endpoints, retry/rate limiting, database schema, repositories, crawl frontier/fetched markers, transaction normalizer, valuation model/confidence/outliers, export/inspection queries, and fixture workflow.
+- **Service/module boundaries to preserve:** CLI stays thin; application services coordinate reusable workflows; Sleeper client has no persistence writes; repositories own SQLAlchemy; valuation reads persisted facts and never calls Sleeper; export/inspection do not recalculate rankings.
+- **Highest-risk areas to isolate early:** Schema/idempotency, Sleeper payload variance, draft-pick identity, add/drop baseline interpretation, crawl resumability, and valuation explainability.
+- **Decisions Planning must not reopen without new evidence:** Local-first MVP, current-season scope, CLI/CSV/query inspection first, FastAPI deferred, completed trades as primary ranking signal, add/drop as baseline signal, raw-plus-normalized persistence.
 
 ---
 
@@ -98,6 +117,13 @@ The plan intentionally excludes a primary dashboard, public API, auth/account sy
 | Asset identity format | Normalization, Valuation, Export/Inspection | Define one stable asset key convention before ranking/export work starts |
 | Raw payload shape | Sleeper Client, Persistence, Normalization | Store raw JSON snapshots, but query normalized columns for application behavior |
 | CLI command names/options | Foundation, Crawl, Valuation, Inspection | Keep initial command contract close to architecture unless implementation reveals a simpler shape |
+
+### Boundary / Contract Alignment
+
+- **Source architecture sections:** `Initial Service and Class Map`, `Component Internal Contracts`, `Dependency Rules`, `Initial CLI Commands`, `Initial Schema Contract`, `Valuation Architecture`, and `Planning Inputs` in `docs/loom/03-architecture.md`.
+- **Dependency rules:** CLI and future API surfaces call application/query services; domain services do not import CLI/FastAPI; Sleeper client does not write to SQLite; repositories own SQLAlchemy; valuation does not call Sleeper; export/inspection do not mutate source facts.
+- **Interfaces / schemas / commands to keep stable:** `Settings.load`, `AppContext.create`, Sleeper endpoint methods, repository bundle responsibilities, `CrawlApplicationService`, `RankingApplicationService`, `RankingQueryService`, `CsvExporter`, asset key format, database schema contract, and `trade-winds crawl/rank/export/inspect` command names.
+- **Architecture updates required before changing:** Database table/key contract, asset identity format, service dependency direction, valuation source-of-truth rules, CLI inspection surface, or FastAPI/dashboard deferral.
 
 ---
 
@@ -267,6 +293,27 @@ Stop and ask for direction if:
 - Ranking output needs an external prior to produce usable results.
 - Local crawling appears likely to violate polite API usage even with conservative throttling.
 
+### Contract / Test Candidates
+
+These candidates are carried into `docs/loom/05-contracts-tests-cicd.md` and executable tests.
+
+| Candidate | Source | Why it matters | Suggested test shape |
+|-----------|--------|----------------|----------------------|
+| Config and app context contracts | Architecture runtime composition | Every service depends on stable configuration and wiring | Unit/contract tests for `Settings.load` and `AppContext.create` |
+| CLI command contract | Architecture initial CLI commands | CLI is the MVP operator surface | Typer CLI tests for help, missing config, options, and command dispatch |
+| Schema contract | Architecture data design | Crawl resumability and ranking reproducibility depend on durable state | SQLAlchemy inspection contract and Alembic migration tests |
+| Repository idempotency | Planning persistence ownership | Re-running crawls/syncs must not duplicate facts | Temp SQLite repository contract tests |
+| Sleeper endpoint coverage | Architecture integration points | External API payloads are a major risk | Fixture-backed client contract tests and opt-in live smoke test |
+| Rate limiter/retry policy | Requirements polite API behavior | Avoid API stress and make failures predictable | Fake-clock unit tests and retry policy unit tests |
+| Crawl discovery resume | Requirements resumable crawl | Interrupted crawls should safely resume | Integration test with fake Sleeper client and temp DB |
+| Transaction normalization | Architecture transaction sync flow | Rankings depend on stable trade/add/drop facts | Fixture-backed unit tests for trades, add/drops, picks, and odd trades |
+| Asset identity | Shared architecture contract | Normalization, ranking, export, and inspection must agree on keys | Unit tests for player and pick asset keys |
+| Valuation model v1 | Valuation architecture | Ranking credibility depends on deterministic explainable behavior | Fixture-backed unit tests with exact expected outputs and recency behavior |
+| Confidence/outliers | Requirements credibility context | Outputs should expose uncertainty and preserve weird trades | Unit tests for calculators and outlier flags |
+| Export/inspection | Requirements inspectable MVP | John needs CSV and query/CLI evidence workflows | CLI/query/export tests seeded from persisted ranking data |
+| Full fixture workflow | Integration checkpoints | Confirms MVP loop without live APIs | End-to-end integration test over fake Sleeper data and temp DB |
+| CI bootstrap | Planning S1.9 | Local and future PR checks need parity | Documented workflow plan and later `.github/workflows/ci.yml` |
+
 ---
 
 ## Delivery Plan
@@ -307,6 +354,12 @@ After the first full crawl/rank/export/inspect loop works, iterate in small vali
 - Compare repeated runs and small configuration changes for stability.
 - Introduce historical seasons or lookback windows only if current-season data is too sparse.
 - Consider FastAPI/admin/web access only after query services feel durable.
+
+---
+
+## Update Policy
+
+Use Planning as the implementation coordination map. Update this document when architecture decisions change, workstream ownership changes, contract boundaries move, or real implementation findings force a better slice order. Do not silently drift from architecture; record material deviations in the relevant phase doc and request approval when a locked contract or test must change.
 
 ---
 
