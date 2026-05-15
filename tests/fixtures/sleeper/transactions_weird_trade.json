@@ -1,0 +1,17 @@
+{
+  "transaction_id": "txn-weird-trade-1",
+  "type": "trade",
+  "status": "complete",
+  "roster_ids": [1, 2],
+  "created": 1780521600000,
+  "adds": {
+    "1111": 1,
+    "2222": 1,
+    "3333": 1
+  },
+  "drops": {},
+  "draft_picks": [],
+  "metadata": {
+    "notes": "Intentionally lopsided fixture to ensure odd completed trades are preserved."
+  }
+}

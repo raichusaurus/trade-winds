@@ -1,0 +1,23 @@
+{
+  "transaction_id": "txn-exact-pick-trade-1",
+  "type": "trade",
+  "status": "complete",
+  "roster_ids": [1, 2],
+  "created": 1780521600000,
+  "adds": {
+    "4046": 2
+  },
+  "drops": {},
+  "draft_picks": [
+    {
+      "season": "2027",
+      "round": 1,
+      "roster_id": 1,
+      "previous_owner_id": 2,
+      "owner_id": 1,
+      "original_owner_id": 2,
+      "pick_no": 3
+    }
+  ],
+  "metadata": {}
+}

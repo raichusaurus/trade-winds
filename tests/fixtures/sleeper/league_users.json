@@ -1,0 +1,17 @@
+[
+  {
+    "user_id": "123456789",
+    "username": "john_seed",
+    "display_name": "John Seed"
+  },
+  {
+    "user_id": "user-2",
+    "username": "trade_partner",
+    "display_name": "Trade Partner"
+  },
+  {
+    "user_id": "user-3",
+    "username": "third_manager",
+    "display_name": "Third Manager"
+  }
+]

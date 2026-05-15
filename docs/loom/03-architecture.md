@@ -300,11 +300,11 @@ The next phase should turn these into explicit contracts and tests. This section
 Expected configuration keys include:
 
 ```text
-TRADE_WINDS_SEED_USERNAME
+TRADE_WINDS_SLEEPER_USERNAME
 TRADE_WINDS_SEASON
 TRADE_WINDS_DB_PATH
 TRADE_WINDS_OUTPUT_DIR
-TRADE_WINDS_REQUESTS_PER_SECOND
+TRADE_WINDS_REQUEST_RATE_PER_SECOND
 TRADE_WINDS_MAX_USERS
 TRADE_WINDS_MAX_LEAGUES
 TRADE_WINDS_MAX_API_CALLS
@@ -785,6 +785,39 @@ ranking_evidence
   contribution_weight
   evidence_json
 ```
+
+### Initial Schema Contract
+
+The first migration should implement this schema contract before crawler or ranking implementation begins. Column types can use the closest SQLite/SQLAlchemy equivalents, but primary keys, uniqueness, nullability, foreign-key intent, and JSON/raw-payload preservation are part of the architecture contract.
+
+| Table | Primary Key | Required Unique / Idempotency Key | Required Foreign Keys | Required JSON / Raw Columns |
+|-------|-------------|-----------------------------------|-----------------------|-----------------------------|
+| `users` | `sleeper_user_id` | `sleeper_user_id` | none | `raw_payload_json` |
+| `leagues` | `sleeper_league_id` | `sleeper_league_id` | none | `roster_positions_json`, `settings_json`, `scoring_settings_json`, `raw_payload_json` |
+| `league_users` | composite or surrogate | unique `sleeper_league_id`, `sleeper_user_id` | `sleeper_league_id -> leagues`, `sleeper_user_id -> users` | `metadata_json` |
+| `rosters` | composite or surrogate | unique `sleeper_league_id`, `roster_id` | `sleeper_league_id -> leagues`, nullable `sleeper_user_id -> users` | `starters_json`, `players_json`, `roster_value_context_json`, `raw_payload_json` |
+| `players` | `sleeper_player_id` | `sleeper_player_id` | none | `metadata_json` |
+| `raw_payloads` | surrogate `id` | unique `source`, `endpoint`, `external_id`, `context_key`, `content_hash` | nullable `source_run_id -> crawl_runs` | `payload_json` |
+| `transactions` | composite or surrogate | unique `sleeper_league_id`, `sleeper_transaction_id` | `sleeper_league_id -> leagues` | `raw_payload_json` |
+| `transaction_assets` | surrogate `id` | unique transaction/roster/movement/asset fields sufficient to make sync idempotent | transaction reference, `sleeper_league_id -> leagues`, nullable `sleeper_user_id -> users`, nullable `sleeper_player_id -> players` | `raw_asset_json` |
+| `trade_sides` | surrogate `id` | unique transaction/roster side | transaction reference, `sleeper_league_id -> leagues`, nullable `sleeper_user_id -> users` | optional `metadata_json` |
+| `trade_assets` | surrogate `id` | unique side/asset fields sufficient to make sync idempotent | `trade_side_id -> trade_sides`, nullable `sleeper_player_id -> players` | `raw_asset_json` |
+| `crawl_runs` | surrogate `id` | none | none | `limits_json`, `counts_json`, `errors_json` |
+| `crawl_frontier` | surrogate `id` | unique `entity_type`, `entity_id`, `season` where season applies | nullable `source_run_id -> crawl_runs` | optional `payload_json` |
+| `fetched_markers` | composite or surrogate | unique `entity_type`, `entity_id`, `season`, `fetch_kind` | nullable `source_run_id -> crawl_runs` | optional `metadata_json` |
+| `league_sync_state` | composite or surrogate | unique `sleeper_league_id`, `season` | `sleeper_league_id -> leagues` | optional `metadata_json` |
+| `ranking_runs` | surrogate `id` | none | none | `config_json`, `input_summary_json` |
+| `ranking_assets` | composite or surrogate | unique `ranking_run_id`, `asset_key` and unique `ranking_run_id`, `rank` | `ranking_run_id -> ranking_runs` | optional `metadata_json` |
+| `ranking_evidence` | surrogate `id` | unique enough to avoid duplicate run/asset/transaction contribution rows | `ranking_run_id -> ranking_runs` | `evidence_json` |
+
+Schema tests should inspect a migrated fresh SQLite database for:
+
+- All required tables.
+- Required primary keys or uniqueness constraints.
+- Foreign keys where SQLite supports them.
+- Required JSON/raw payload columns.
+- Nullable draft-pick precision fields on transaction and trade assets.
+- Idempotency constraints for Sleeper IDs, transaction IDs, frontier markers, and ranking outputs.
 
 ### Entity Notes
 

@@ -1,0 +1,15 @@
+[
+  {
+    "league_id": "league-1",
+    "name": "Dynasty Test League",
+    "season": "2026",
+    "total_rosters": 12,
+    "settings": {
+      "reserve_slots": 2,
+      "taxi_slots": 4
+    },
+    "scoring_settings": {
+      "rec": 1.0
+    }
+  }
+]

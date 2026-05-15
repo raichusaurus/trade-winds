@@ -1,0 +1,46 @@
+{
+  "as_of": "2026-06-03T00:00:00Z",
+  "completed_trades": [
+    {
+      "transaction_id": "txn-new",
+      "league_id": "league-1",
+      "created_at": "2026-06-01T00:00:00Z",
+      "sides": [
+        {
+          "roster_id": "1",
+          "assets": ["player:4046"]
+        },
+        {
+          "roster_id": "2",
+          "assets": ["player:7564"]
+        }
+      ]
+    },
+    {
+      "transaction_id": "txn-old",
+      "league_id": "league-1",
+      "created_at": "2025-12-01T00:00:00Z",
+      "sides": [
+        {
+          "roster_id": "1",
+          "assets": ["player:7564"]
+        },
+        {
+          "roster_id": "2",
+          "assets": ["player:4046"]
+        }
+      ]
+    }
+  ],
+  "add_drop_facts": [],
+  "player_metadata": {
+    "player:4046": {
+      "display_name": "Bijan Robinson",
+      "position": "RB"
+    },
+    "player:7564": {
+      "display_name": "CeeDee Lamb",
+      "position": "WR"
+    }
+  }
+}
