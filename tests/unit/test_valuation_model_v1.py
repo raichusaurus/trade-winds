@@ -37,9 +37,11 @@ def test_valuation_model_v1_applies_recency_weighting(fixture_json) -> None:
         RankingConfig(model_version="trade-winds-v1", recency_half_life_days=180),
     )
 
-    assert fast_decay.asset_by_key("player:4046").value_score > fast_decay.asset_by_key(
-        "player:7564"
-    ).value_score
-    assert slow_decay.asset_by_key("player:4046").value_score < fast_decay.asset_by_key(
-        "player:4046"
-    ).value_score
+    assert (
+        fast_decay.asset_by_key("player:4046").value_score
+        > fast_decay.asset_by_key("player:7564").value_score
+    )
+    assert (
+        slow_decay.asset_by_key("player:4046").value_score
+        < fast_decay.asset_by_key("player:4046").value_score
+    )

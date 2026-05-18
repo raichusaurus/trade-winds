@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import pytest
 
-
 REQUIRED_TABLES = {
     "users",
     "leagues",
@@ -223,7 +222,6 @@ REQUIRED_UNIQUE_CONSTRAINT_COLUMNS = {
 @pytest.mark.contracts
 def test_initial_database_schema_matches_architecture_contract(tmp_path) -> None:
     from sqlalchemy import create_engine, inspect
-
     from trade_winds.db.schema import create_database_schema
 
     engine = create_engine(f"sqlite:///{tmp_path / 'trade-winds.sqlite3'}")
@@ -232,7 +230,7 @@ def test_initial_database_schema_matches_architecture_contract(tmp_path) -> None
     inspector = inspect(engine)
 
     table_names = set(inspector.get_table_names())
-    assert REQUIRED_TABLES <= table_names
+    assert table_names >= REQUIRED_TABLES
 
     for table_name, required_columns in REQUIRED_COLUMNS.items():
         actual_columns = {column["name"] for column in inspector.get_columns(table_name)}
@@ -248,15 +246,14 @@ def test_initial_database_schema_matches_architecture_contract(tmp_path) -> None
         ]
         primary_key_columns = set(inspector.get_pk_constraint(table_name)["constrained_columns"])
 
-        assert (
-            required_columns in unique_column_sets or required_columns <= primary_key_columns
-        ), f"{table_name} must enforce idempotency on {sorted(required_columns)}"
+        assert required_columns in unique_column_sets or required_columns <= primary_key_columns, (
+            f"{table_name} must enforce idempotency on {sorted(required_columns)}"
+        )
 
 
 @pytest.mark.contracts
 def test_pick_precision_fields_are_nullable_for_unknown_exact_picks(tmp_path) -> None:
     from sqlalchemy import create_engine, inspect
-
     from trade_winds.db.schema import create_database_schema
 
     engine = create_engine(f"sqlite:///{tmp_path / 'trade-winds.sqlite3'}")

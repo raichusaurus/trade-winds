@@ -288,8 +288,8 @@ The current test suite now covers the major phase gaps as executable contracts. 
 | End-to-end fixture workflow test | Covered by red integration test | `tests/integration/test_full_fixture_workflow.py` |
 | CLI option matrix tests | Partially covered by red CLI tests | `tests/cli/test_command_options.py`; add more options as commands are implemented |
 | Live Sleeper smoke tests | Covered by opt-in skipped-by-default test | `tests/live/test_sleeper_live_smoke.py` |
-| Type-checking policy | Deferred to CI bootstrap | Decide Pyright or mypy before making type checks required |
-| CI/CD workflow file | Deferred to CI bootstrap | Add `.github/workflows/ci.yml` during `S1.9` after `uv.lock` exists |
+| Type-checking policy | Deferred to implementation bootstrap | Decide Pyright or mypy before making type checks required |
+| CI/CD workflow file | Covered for contract readiness | `.github/workflows/ci.yml` runs locked dependency sync, Ruff checks, and pytest collection |
 
 ### Coverage Matrix
 
@@ -370,18 +370,20 @@ Fixtures are source examples, not golden implementation outputs. Golden files ma
 ### Current Status
 
 - **Runnable scaffold exists?** [ ] Yes [x] No
-- **Dependency lockfile exists?** [ ] Yes [x] No
+- **Dependency lockfile exists?** [x] Yes [ ] No
 - **Tests currently expected to pass?** [ ] Yes [x] No
-- **CI/check workflow exists?** [ ] Yes [x] No
+- **CI/check workflow exists?** [x] Yes [ ] No
 
-CI/CD is **not set up yet**. This is intentional for the current moment because:
+CI/CD is set up for contract-readiness, not full implementation readiness. The current workflow verifies:
 
-- The repository has contract tests that are expected to fail until implementation exists.
-- `uv.lock` has not been generated yet.
-- The package scaffold is not complete enough for a meaningful install/build check.
-- Local pytest is not currently installed in the active environment.
+- `uv sync --locked`
+- `uv run ruff format --check .`
+- `uv run ruff check .`
+- `uv run pytest --collect-only`
 
-CI/CD should become a dedicated bootstrap slice after S0/S1/S1.75 and before merge-gated implementation work. In the planning document this is `S1.9: CI Bootstrap`.
+Full pytest is intentionally not a CI gate yet because the repository has contract tests that are expected to fail until implementation exists. The package scaffold is also not complete enough for a meaningful full test pass.
+
+CI/CD should be promoted during implementation bootstrap. In the planning document this is `S1.9: CI Bootstrap`.
 
 ### Automation Bootstrap Plan
 
@@ -409,7 +411,7 @@ jobs:
       - run: uv sync --locked
       - run: uv run ruff format --check .
       - run: uv run ruff check .
-      - run: uv run pytest
+      - run: uv run pytest --collect-only
 ```
 
 Add these checks as the relevant implementation pieces land:
@@ -419,7 +421,8 @@ Add these checks as the relevant implementation pieces land:
 | `uv sync --locked` | `uv.lock` exists | Yes |
 | `uv run ruff format --check .` | Ruff config exists | Yes |
 | `uv run ruff check .` | Ruff config exists | Yes |
-| `uv run pytest` | First implementation slice is expected to pass the current contract suite | Yes |
+| `uv run pytest --collect-only` | Before implementation exists | Yes |
+| `uv run pytest` | First implementation slice is expected to pass the current contract suite | Yes, after promotion |
 | `uv run pytest --cov=trade_winds --cov-report=term-missing` | Package scaffold exists and first green suite is stable | Start informational, then blocking |
 | Type checking | Pyright or mypy is selected | Start informational, then blocking |
 | Alembic migration check | Alembic exists | Blocking for persistence changes |
@@ -429,9 +432,10 @@ Live Sleeper tests must not run on normal pull requests. If they are added later
 
 ### Required Checks
 
-- [ ] `uv sync --locked`
-- [ ] `uv run ruff format --check .`
-- [ ] `uv run ruff check .`
+- [x] `uv sync --locked`
+- [x] `uv run ruff format --check .`
+- [x] `uv run ruff check .`
+- [x] `uv run pytest --collect-only`
 - [ ] `uv run pytest`
 - [ ] `uv run pytest --cov=trade_winds --cov-report=term-missing`
 - [ ] Type checking after the type checker is selected
@@ -503,18 +507,69 @@ No hosted alerts are required for MVP. Observability is local logs, CLI summarie
 - **Contract stability and rewrite approval policy captured?** [x] Yes
 - **Known intentionally red tests documented?** [x] Yes
 
+### Phase-Close Validation Status
+
+As of 2026-05-15, the test contracts and fixtures have been written and pytest collection has been validated locally.
+
+| Item | Status | Notes |
+|------|--------|-------|
+| Python syntax check | Passed | `python -m compileall -q tests` passed before this phase-close pass. |
+| JSON fixture validation | Passed | All JSON fixtures under `tests/fixtures` parsed successfully before this phase-close pass. |
+| `uv` availability | Passed | `uv 0.11.14` is available locally. |
+| Dependency sync | Passed | `UV_CACHE_DIR=.uv-cache uv sync` created `.venv` and installed dev/test dependencies. |
+| `uv.lock` generation | Passed | `uv.lock` exists and should be committed with this phase-close work. |
+| Ruff format check | Passed | `UV_CACHE_DIR=.uv-cache uv run ruff format --check .` passed after mechanical formatting. |
+| Ruff lint check | Passed | `UV_CACHE_DIR=.uv-cache uv run ruff check .` passed after mechanical import/style fixes. |
+| Pytest collection | Passed | `UV_CACHE_DIR=.uv-cache uv run pytest --collect-only` collected 56 tests. |
+| Full pytest run | Intentionally red | `UV_CACHE_DIR=.uv-cache uv run pytest` collected 56 tests: 55 failed because `trade_winds` is not implemented yet, and 1 live smoke test was skipped by default. |
+| CI workflow creation | Passed for contract readiness | `.github/workflows/ci.yml` runs `uv sync --locked`, Ruff format/lint, and pytest collection. Full pytest remains intentionally non-blocking until implementation exists. |
+
+First implementation-bootstrap task:
+
+1. Create the `trade_winds` package scaffold.
+2. Run `UV_CACHE_DIR=.uv-cache uv run pytest --collect-only`.
+3. Fix only mechanical collection issues, using the rewrite approval process for any contract changes.
+4. Run `UV_CACHE_DIR=.uv-cache uv run pytest` and drive failures green by implementation slice.
+5. Update `.github/workflows/ci.yml` to run full pytest once the implementation scaffold starts turning contracts green.
+
 ### Before Implementation Starts
 
-- [ ] Create Python package scaffold and test directories.
-- [ ] Add `pytest`, `pytest-cov`, `ruff`, `typer`, and selected HTTP mocking library to `pyproject.toml`.
-- [ ] Add the first failing CLI/config tests for S0/S1.
-- [ ] Add fixture directory structure.
-- [ ] Add the schema contract test before database implementation.
-- [ ] Generate `uv.lock` once `uv` is available.
-- [ ] Add `.github/workflows/ci.yml` during S1.9 CI Bootstrap.
-- [ ] Decide when CI becomes blocking for pull requests.
+- [x] Create test directories.
+- [ ] Create Python package scaffold.
+- [x] Add current test/dev dependencies to `pyproject.toml`.
+- [x] Add the first failing CLI/config tests for S0/S1.
+- [x] Add fixture directory structure.
+- [x] Add the schema contract test before database implementation.
+- [x] Generate `uv.lock` once `uv` is available.
+- [x] Validate pytest collection.
+- [x] Validate Ruff format/lint checks.
+- [x] Add `.github/workflows/ci.yml` during S1.9 CI Bootstrap.
+- [x] Decide when CI becomes blocking for pull requests: collection/Ruff are blocking now; full pytest becomes blocking once implementation exists.
 - [ ] Decide between `pytest-httpx` and `respx` during Sleeper client slice.
 - [ ] Decide between Pyright and mypy during scaffold slice.
+
+### Remaining Contract & Testing Needs For Next Session
+
+These are the remaining testing decisions or validation gates before implementation can move with confidence. They are not permission to rewrite existing contracts.
+
+| Need | Timing | Current Position |
+|------|--------|------------------|
+| Create package scaffold | First implementation-bootstrap step | Add the minimal `trade_winds` package shape needed for imports and CLI entry points. This is implementation scaffolding, not a test rewrite. |
+| Re-run collection after scaffold | Immediately after scaffold | `UV_CACHE_DIR=.uv-cache uv run pytest --collect-only` should still collect 56 tests unless new tests are added. |
+| Drive full pytest red to green | Slice by slice during implementation | Current full pytest failure is expected: 55 tests fail because `trade_winds` does not exist yet, and 1 live test skips by default. |
+| Promote CI from collection to full pytest | Once initial implementation slices are green | Replace `uv run pytest --collect-only` with `uv run pytest` when the suite is expected to pass in CI. |
+| Type checker decision | During scaffold slice | Choose Pyright for editor-first feedback or mypy if SQLAlchemy typing/plugin support becomes the priority. Start informational before blocking. |
+| HTTP mocking decision | During Sleeper client slice | Current tests use fake clients/transports. Choose `pytest-httpx` for simple request mocking or `respx` if route-level matching reads cleaner. |
+| Coverage threshold | After first stable green suite | Begin informational with `pytest-cov`; make it blocking only after behavior is stable enough to avoid noisy gates. |
+| Fixture expansion | As real payload edge cases appear | Add fixtures for new Sleeper shapes. Do not rewrite locked fixtures without John's approval. |
+| Contract rewrite governance | Always | Existing tests may be rewritten only after John approves a specific explanation from the implementation owner. New tests may be added freely for defects and edge cases. |
+| Live Sleeper smoke test | Manual/opt-in only | Keep skipped by default with `TRADE_WINDS_LIVE_SLEEPER=1`; never make it a normal pull-request gate. |
+
+Recommended new-session trigger:
+
+```text
+Continue Trade Winds from the end of Phase 5. Read docs/loom/03-architecture.md, docs/loom/04-planning.md, and especially docs/loom/05-contracts-tests-cicd.md. Start with S0/S1 implementation bootstrap on a new branch from main: create the trade_winds package scaffold, run UV_CACHE_DIR=.uv-cache uv sync --locked, uv run ruff check ., uv run ruff format --check ., and uv run pytest --collect-only. Do not rewrite existing tests without my approval; follow the Contract Stability Register.
+```
 
 ### Remaining Concerns
 

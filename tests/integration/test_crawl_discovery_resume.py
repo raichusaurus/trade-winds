@@ -4,7 +4,9 @@ import pytest
 
 
 @pytest.mark.integration
-def test_discovery_resume_does_not_duplicate_persisted_users_or_leagues(tmp_path, fixture_json) -> None:
+def test_discovery_resume_does_not_duplicate_persisted_users_or_leagues(
+    tmp_path, fixture_json
+) -> None:
     from trade_winds.app import AppContext
     from trade_winds.config import Settings
     from trade_winds.sleeper.testing import FakeSleeperClient

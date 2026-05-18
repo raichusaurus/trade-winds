@@ -39,7 +39,16 @@ def test_inspect_rankings_filters_by_asset_type_and_position(monkeypatch, tmp_pa
 
     result = CliRunner().invoke(
         app,
-        ["inspect", "rankings", "--run-id", "rank-run-1", "--asset-type", "player", "--position", "RB"],
+        [
+            "inspect",
+            "rankings",
+            "--run-id",
+            "rank-run-1",
+            "--asset-type",
+            "player",
+            "--position",
+            "RB",
+        ],
     )
 
     assert result.exit_code == 0
