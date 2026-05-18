@@ -10,6 +10,7 @@
 ## Navigation
 
 - **Parent:** [Project Progress](../../PROGRESS.md)
+- **System design drilldown:** [System Design Progress](../../scopes/system-design/PROGRESS.md)
 - **Related phase doc:** [Contracts & Tests / CI/CD](../../05-contracts-tests-cicd.md)
 - **Implementation handoff:** [Phase 5 Remaining Needs](../../05-remaining-needs.md)
 

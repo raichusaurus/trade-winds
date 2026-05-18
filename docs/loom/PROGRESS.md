@@ -40,6 +40,8 @@ docs/loom/
   phases/
     contracts-tests/PROGRESS.md
     implementation/PROGRESS.md
+  scopes/
+    system-design/PROGRESS.md
 ```
 
 Each child progress document should include:
@@ -58,22 +60,23 @@ Child progress docs exist for the two active drilldown areas: contract readiness
 
 | Scope | Type | Parent | Total | Current Focus | Progress Doc | Notes |
 |-------|------|--------|-------|---------------|--------------|-------|
-| Trade Winds | Project | None | 70% | Implementation bootstrap after contract-ready Phase 5 | `docs/loom/PROGRESS.md` | Root cockpit. |
-| Discovery | Phase | Project | 100% | Closed | `docs/loom/01-discovery.md` | Child progress doc not needed. |
-| Requirements | Phase | Project | 100% | Closed | `docs/loom/02-requirements.md` | Child progress doc not needed. |
-| Architecture | Phase | Project | 100% | Closed | `docs/loom/03-architecture.md` | Child progress doc not needed. |
-| Planning & Decomposition | Phase | Project | 100% | Closed | `docs/loom/04-planning.md` | Child progress doc not needed. |
-| Contracts & Tests | Phase | Project | 100% | Contract-ready, implementation-red | `docs/loom/phases/contracts-tests/PROGRESS.md` | Drilldown for test coverage, gates, and deferred decisions. |
-| Implementation | Phase | Project | 0% | Package scaffold next | `docs/loom/phases/implementation/PROGRESS.md` | Drilldown for workstreams, components, units, and next implementation actions. |
-| Review & Retrospective | Phase | Project | 0% | Not started | `docs/loom/07-retrospective.md` | Child progress doc not needed yet. |
-| Project Foundation | Workstream | Implementation | 67% | Create `trade_winds` scaffold | `docs/loom/phases/implementation/PROGRESS.md` | Implementation drilldown. |
-| Persistence & Schema | Workstream | Implementation | 67% | Implement schema/repositories | `docs/loom/phases/implementation/PROGRESS.md` | Implementation drilldown. |
-| Sleeper Client | Workstream | Implementation | 67% | Implement fake/real client boundary | `docs/loom/phases/implementation/PROGRESS.md` | Implementation drilldown. |
-| Crawl Orchestration | Workstream | Implementation | 67% | Implement discovery/sync services | `docs/loom/phases/implementation/PROGRESS.md` | Implementation drilldown. |
-| Transaction Normalization | Workstream | Implementation | 67% | Implement normalizer and asset keys | `docs/loom/phases/implementation/PROGRESS.md` | Implementation drilldown. |
-| Valuation Engine | Workstream | Implementation | 67% | Implement model/confidence/outliers | `docs/loom/phases/implementation/PROGRESS.md` | Implementation drilldown. |
-| Export & Inspection | Workstream | Implementation | 67% | Implement CSV/query/CLI surfaces | `docs/loom/phases/implementation/PROGRESS.md` | Implementation drilldown. |
-| CI Bootstrap | Workstream | Contracts & Tests / Implementation | 75% | Promote from collection to full pytest later | `docs/loom/phases/contracts-tests/PROGRESS.md` | Automation/test-readiness drilldown. |
+| Trade Winds | Project | None | 70% | Implementation bootstrap after contract-ready Phase 5 | [Project Progress](PROGRESS.md) | Root cockpit. |
+| System Design | Scope | Project | 67% | Track service/component/unit hierarchy | [System Design Progress](scopes/system-design/PROGRESS.md) | Drilldown from services to smallest tracked units. |
+| Discovery | Phase | Project | 100% | Closed | [Discovery](01-discovery.md) | Child progress doc not needed. |
+| Requirements | Phase | Project | 100% | Closed | [Requirements](02-requirements.md) | Child progress doc not needed. |
+| Architecture | Phase | Project | 100% | Closed | [Architecture](03-architecture.md) | Child progress doc not needed. |
+| Planning & Decomposition | Phase | Project | 100% | Closed | [Planning](04-planning.md) | Child progress doc not needed. |
+| Contracts & Tests | Phase | Project | 100% | Contract-ready, implementation-red | [Contracts & Tests Progress](phases/contracts-tests/PROGRESS.md) | Drilldown for test coverage, gates, and deferred decisions. |
+| Implementation | Phase | Project | 0% | Package scaffold next | [Implementation Progress](phases/implementation/PROGRESS.md) | Drilldown for workstreams, components, units, and next implementation actions. |
+| Review & Retrospective | Phase | Project | 0% | Not started | [Retrospective](07-retrospective.md) | Child progress doc not needed yet. |
+| Project Foundation | Workstream | Implementation | 67% | Create `trade_winds` scaffold | [Implementation Progress](phases/implementation/PROGRESS.md) | Implementation drilldown. |
+| Persistence & Schema | Workstream | Implementation | 67% | Implement schema/repositories | [Implementation Progress](phases/implementation/PROGRESS.md) | Implementation drilldown. |
+| Sleeper Client | Workstream | Implementation | 67% | Implement fake/real client boundary | [Implementation Progress](phases/implementation/PROGRESS.md) | Implementation drilldown. |
+| Crawl Orchestration | Workstream | Implementation | 67% | Implement discovery/sync services | [Implementation Progress](phases/implementation/PROGRESS.md) | Implementation drilldown. |
+| Transaction Normalization | Workstream | Implementation | 67% | Implement normalizer and asset keys | [Implementation Progress](phases/implementation/PROGRESS.md) | Implementation drilldown. |
+| Valuation Engine | Workstream | Implementation | 67% | Implement model/confidence/outliers | [Implementation Progress](phases/implementation/PROGRESS.md) | Implementation drilldown. |
+| Export & Inspection | Workstream | Implementation | 67% | Implement CSV/query/CLI surfaces | [Implementation Progress](phases/implementation/PROGRESS.md) | Implementation drilldown. |
+| CI Bootstrap | Workstream | Contracts & Tests / Implementation | 75% | Promote from collection to full pytest later | [Contracts & Tests Progress](phases/contracts-tests/PROGRESS.md) | Automation/test-readiness drilldown. |
 
 ## Project Snapshot
 
@@ -117,16 +120,16 @@ Child progress docs exist for the two active drilldown areas: contract readiness
 
 | Workstream | Requirements | Architecture | Planning | Contracts & Tests | Implementation | Review | Total | Evidence |
 |------------|--------------|--------------|----------|-------------------|----------------|--------|-------|----------|
-| Project Foundation | 100% | 100% | 100% | 100% | 0% | 0% | 67% | `docs/loom/phases/implementation/PROGRESS.md` |
-| Service Boundary Design | 100% | 100% | 100% | 100% | 0% | 0% | 67% | `docs/loom/phases/implementation/PROGRESS.md` |
-| Persistence & Schema | 100% | 100% | 100% | 100% | 0% | 0% | 67% | `docs/loom/phases/implementation/PROGRESS.md` |
-| Sleeper Client | 100% | 100% | 100% | 100% | 0% | 0% | 67% | `docs/loom/phases/implementation/PROGRESS.md` |
-| Crawl Orchestration | 100% | 100% | 100% | 100% | 0% | 0% | 67% | `docs/loom/phases/implementation/PROGRESS.md` |
-| Transaction Normalization | 100% | 100% | 100% | 100% | 0% | 0% | 67% | `docs/loom/phases/implementation/PROGRESS.md` |
-| Valuation Engine | 100% | 100% | 100% | 100% | 0% | 0% | 67% | `docs/loom/phases/implementation/PROGRESS.md` |
-| Export & Inspection | 100% | 100% | 100% | 100% | 0% | 0% | 67% | `docs/loom/phases/implementation/PROGRESS.md` |
-| Tests & Contracts | 100% | 100% | 100% | 100% | 100% | 0% | 83% | `docs/loom/phases/contracts-tests/PROGRESS.md` |
-| CI Bootstrap | 100% | 100% | 100% | 100% | 50% | 0% | 75% | `docs/loom/phases/contracts-tests/PROGRESS.md` |
+| Project Foundation | 100% | 100% | 100% | 100% | 0% | 0% | 67% | [Implementation Progress](phases/implementation/PROGRESS.md) |
+| Service Boundary Design | 100% | 100% | 100% | 100% | 0% | 0% | 67% | [Implementation Progress](phases/implementation/PROGRESS.md) |
+| Persistence & Schema | 100% | 100% | 100% | 100% | 0% | 0% | 67% | [Implementation Progress](phases/implementation/PROGRESS.md) |
+| Sleeper Client | 100% | 100% | 100% | 100% | 0% | 0% | 67% | [Implementation Progress](phases/implementation/PROGRESS.md) |
+| Crawl Orchestration | 100% | 100% | 100% | 100% | 0% | 0% | 67% | [Implementation Progress](phases/implementation/PROGRESS.md) |
+| Transaction Normalization | 100% | 100% | 100% | 100% | 0% | 0% | 67% | [Implementation Progress](phases/implementation/PROGRESS.md) |
+| Valuation Engine | 100% | 100% | 100% | 100% | 0% | 0% | 67% | [Implementation Progress](phases/implementation/PROGRESS.md) |
+| Export & Inspection | 100% | 100% | 100% | 100% | 0% | 0% | 67% | [Implementation Progress](phases/implementation/PROGRESS.md) |
+| Tests & Contracts | 100% | 100% | 100% | 100% | 100% | 0% | 83% | [Contracts & Tests Progress](phases/contracts-tests/PROGRESS.md) |
+| CI Bootstrap | 100% | 100% | 100% | 100% | 50% | 0% | 75% | [Contracts & Tests Progress](phases/contracts-tests/PROGRESS.md) |
 
 ## Next Score-Changing Actions
 

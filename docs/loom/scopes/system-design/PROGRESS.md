@@ -1,49 +1,52 @@
-# Progress: Implementation
+# Progress: System Design
 
-**Type:** Phase  
+**Type:** Scope  
 **Parent:** [Project Progress](../../PROGRESS.md)  
 **Owner:** Codex + John Hightshue  
-**Total Complete:** 0% implementation, 67% contract/planning readiness across delivery workstreams  
-**Current Focus:** Create the `trade_winds` package scaffold and keep pytest collection green  
+**Total Complete:** 67%  
+**Current Focus:** Track the designed service/component/unit hierarchy through implementation  
 **Last Updated:** 2026-05-18
 
 ## Navigation
 
 - **Parent:** [Project Progress](../../PROGRESS.md)
-- **System design drilldown:** [System Design Progress](../../scopes/system-design/PROGRESS.md)
-- **Related phase doc:** [Implementation](../../06-implementation.md)
+- **Contracts drilldown:** [Contracts & Tests Progress](../../phases/contracts-tests/PROGRESS.md)
+- **Implementation drilldown:** [Implementation Progress](../../phases/implementation/PROGRESS.md)
+- **Architecture:** [Architecture](../../03-architecture.md)
 - **Planning:** [Planning & Decomposition](../../04-planning.md)
-- **Contracts:** [Contracts & Tests / CI/CD](../../05-contracts-tests-cicd.md)
 
 ## Phase Completion
 
 | Phase | Complete | Weight | Evidence / Source | Notes |
 |-------|----------|--------|-------------------|-------|
-| Requirements | 100% | 1 | `docs/loom/02-requirements.md` | MVP scope and acceptance criteria define implementation target. |
-| Architecture | 100% | 1 | `docs/loom/03-architecture.md` | Component boundaries and data contracts defined. |
-| Planning & Decomposition | 100% | 1 | `docs/loom/04-planning.md` | Workstreams, slices, and handoffs defined. |
-| Contracts & Tests | 100% | 1 | `docs/loom/05-contracts-tests-cicd.md`; `tests/` | 58 tests collect; full suite intentionally red. |
-| Implementation | 0% | 1 | `docs/loom/06-implementation.md` | `trade_winds` package does not exist yet. |
+| Requirements | 100% | 1 | `docs/loom/02-requirements.md` | MVP scope defines the system boundary. |
+| Architecture | 100% | 1 | `docs/loom/03-architecture.md` | Services, components, data contracts, and CLI surfaces are designed. |
+| Planning & Decomposition | 100% | 1 | `docs/loom/04-planning.md` | Workstreams and ownership boundaries are decomposed. |
+| Contracts & Tests | 100% | 1 | `docs/loom/05-contracts-tests-cicd.md`; `tests/` | Each service/component area has executable contracts. |
+| Implementation | 0% | 1 | `docs/loom/06-implementation.md` | Production package does not exist yet. |
 | Review & Retrospective | 0% | 1 | `docs/loom/07-retrospective.md` | Not started. |
-| **Phase Total** | **67%** | | | Ready for implementation, not implemented. |
+| **Phase Total** | **67%** | | | Design and contracts are complete; implementation is next. |
 
-## Workstream Progress
+## Services
 
-| Workstream | Requirements | Architecture | Planning | Contracts & Tests | Implementation | Review | Total | Evidence |
-|------------|--------------|--------------|----------|-------------------|----------------|--------|-------|----------|
-| Project Foundation | 100% | 100% | 100% | 100% | 0% | 0% | 67% | [System Design Progress](../../scopes/system-design/PROGRESS.md) |
-| Service Boundary Design | 100% | 100% | 100% | 100% | 0% | 0% | 67% | [System Design Progress](../../scopes/system-design/PROGRESS.md) |
-| Persistence & Schema | 100% | 100% | 100% | 100% | 0% | 0% | 67% | [System Design Progress](../../scopes/system-design/PROGRESS.md) |
-| Sleeper Client | 100% | 100% | 100% | 100% | 0% | 0% | 67% | [System Design Progress](../../scopes/system-design/PROGRESS.md) |
-| Crawl Orchestration | 100% | 100% | 100% | 100% | 0% | 0% | 67% | [System Design Progress](../../scopes/system-design/PROGRESS.md) |
-| Transaction Normalization | 100% | 100% | 100% | 100% | 0% | 0% | 67% | [System Design Progress](../../scopes/system-design/PROGRESS.md) |
-| Valuation Engine | 100% | 100% | 100% | 100% | 0% | 0% | 67% | [System Design Progress](../../scopes/system-design/PROGRESS.md) |
-| Export & Inspection | 100% | 100% | 100% | 100% | 0% | 0% | 67% | [System Design Progress](../../scopes/system-design/PROGRESS.md) |
+For this local-first MVP, "service" means an owned implementation boundary or application service area, not a separately deployed process.
 
-## Component Progress
+| Service | Weight | Phase Total | Child Rollup | Total | Progress Doc | Notes |
+|---------|--------|-------------|--------------|-------|--------------|-------|
+| Project Foundation | 1 | 67% | 67% | 67% | [Implementation Progress](../../phases/implementation/PROGRESS.md) | Config, CLI shell, package scaffold. |
+| Service Boundary Design | 1 | 67% | 67% | 67% | [Implementation Progress](../../phases/implementation/PROGRESS.md) | App context and application services. |
+| Persistence & Schema | 1 | 67% | 67% | 67% | [Implementation Progress](../../phases/implementation/PROGRESS.md) | SQLite schema, migrations, repositories. |
+| Sleeper Client | 1 | 67% | 67% | 67% | [Implementation Progress](../../phases/implementation/PROGRESS.md) | API client, resilience, test doubles. |
+| Crawl Orchestration | 1 | 67% | 67% | 67% | [Implementation Progress](../../phases/implementation/PROGRESS.md) | Discovery and transaction sync. |
+| Transaction Normalization | 1 | 67% | 67% | 67% | [Implementation Progress](../../phases/implementation/PROGRESS.md) | Asset identity, trade/add-drop normalization. |
+| Valuation Engine | 1 | 67% | 67% | 67% | [Implementation Progress](../../phases/implementation/PROGRESS.md) | Model, confidence, outliers, ranking generation. |
+| Export & Inspection | 1 | 67% | 67% | 67% | [Implementation Progress](../../phases/implementation/PROGRESS.md) | CSV export and query/CLI inspection. |
+| **Child Rollup** | | | | **67%** | | Equal-weight average. |
 
-| Component | Parent Workstream | Requirements | Architecture | Planning | Contracts & Tests | Implementation | Review | Total | Notes |
-|-----------|-------------------|--------------|--------------|----------|-------------------|----------------|--------|-------|-------|
+## Components
+
+| Component | Parent Service | Requirements | Architecture | Planning | Contracts & Tests | Implementation | Review | Total | Notes |
+|-----------|----------------|--------------|--------------|----------|-------------------|----------------|--------|-------|-------|
 | Configuration | Project Foundation | 100% | 100% | 100% | 100% | 0% | 0% | 67% | Env/default validation contract exists. |
 | CLI Application | Project Foundation | 100% | 100% | 100% | 100% | 0% | 0% | 67% | Command names/options are locked. |
 | App Context | Service Boundary Design | 100% | 100% | 100% | 100% | 0% | 0% | 67% | Wiring and override contracts exist. |
@@ -64,12 +67,12 @@
 | Ranking Inspection | Export & Inspection | 100% | 100% | 100% | 100% | 0% | 0% | 67% | Filter/evidence contracts exist. |
 | Ranking Comparison | Export & Inspection | 100% | 100% | 100% | 100% | 0% | 0% | 67% | Run movement contract exists. |
 
-## Class / Unit Progress
+## Smallest Tracked Units
 
-Smallest tracked units are the classes, command groups, helpers, schemas, and workflows that currently have independent contracts or implementation ownership. Additional internal classes should be added here only when their completion matters independently.
+These are the smallest classes, command groups, helpers, schemas, and workflows currently worth tracking independently. Add internal units only when their completion status matters on its own.
 
-| Class / Unit | Parent Component | Contracts & Tests | Implementation | Review | Total | Evidence / Source |
-|--------------|------------------|-------------------|----------------|--------|-------|-------------------|
+| Unit | Parent Component | Contracts & Tests | Implementation | Review | Total | Evidence / Source |
+|------|------------------|-------------------|----------------|--------|-------|-------------------|
 | `Settings` | Configuration | 100% | 0% | 0% | 33% | `tests/unit/test_settings.py` |
 | `ConfigError` | Configuration | 100% | 0% | 0% | 33% | `tests/unit/test_settings.py`; `tests/cli/test_config_errors.py` |
 | `trade_winds.cli.app` | CLI Application | 100% | 0% | 0% | 33% | `tests/cli/test_config_errors.py`; `tests/cli/test_command_options.py` |
@@ -116,15 +119,12 @@ Smallest tracked units are the classes, command groups, helpers, schemas, and wo
 
 | Action | Phase / Area | Expected Score Impact | Owner |
 |--------|--------------|-----------------------|-------|
-| Create the minimal `trade_winds` package scaffold and keep collection green | Implementation / Project Foundation | Moves Project Foundation implementation above 0%; may increase project total if scaffold is accepted as implementation progress. | Codex |
-| Implement settings/env validation and CLI help/config errors | Implementation / Project Foundation | Turns first focused red contracts green for Configuration and CLI Application units. | Codex |
-| Implement `AppContext.create` dependency wiring and test override path | Implementation / Service Boundary Design | Moves App Context implementation above 0%. | Codex |
-| Implement database schema creation and migration helpers | Implementation / Persistence & Schema | Moves schema/migration units above 0% and unlocks repository work. | Codex |
+| Create `trade_winds` package scaffold | Implementation / system design | Moves implementation above 0% for foundation units. | Codex |
+| Split a service/component into its own child progress doc | Progress organization | Improves navigation if a scope develops independent blockers or ownership. | Codex |
 
 ## Blockers and Questions
 
 | Item | Impact | Owner | Next Step |
 |------|--------|-------|-----------|
-| No `trade_winds` package | Full pytest fails at import time. | Codex | Create package scaffold first. |
-| Type checker undecided | Type-check implementation cannot be scored yet. | John + Codex | Decide Pyright or mypy during scaffold slice. |
-| HTTP mocking library undecided | Sleeper client test-support shape may change. | Codex | Decide during Sleeper client slice if fake transport is insufficient. |
+| Production modules not created | All system-design units remain 0% implementation. | Codex | Start implementation bootstrap. |
+| Scope weights are equal by default | May understate/overstate heavy persistence/crawl/valuation work. | John | Decide whether to weight services by effort or risk later. |
