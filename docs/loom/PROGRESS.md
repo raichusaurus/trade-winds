@@ -1,6 +1,15 @@
 # Loom Progress Ledger
 
-Project-specific completion ledger for Trade Winds. Update this document whenever changes are pushed to `main`, especially when a phase gate changes, implementation scope lands, tests move from red to green, or a workstream is added/removed.
+Project-specific completion ledger for Trade Winds. This root file is the project cockpit. It should stand alone while the project is small, then become an index into child progress ledgers if phases, services, components, or units need their own ownership, blockers, scoring evidence, or review path.
+
+Update this document whenever changes land on `main`, especially when:
+
+- A phase gate opens or closes
+- A workstream, service, component, or smallest tracked unit is added, removed, split, or merged
+- Contracts/tests move from planned to executable, or from red to green
+- Implementation scope lands
+- CI/check automation changes status
+- Review, acceptance, or retrospective evidence changes a score
 
 ## How Progress Is Scored
 
@@ -13,7 +22,58 @@ Percentages use the Loom defaults:
 - `100%` = phase gate is satisfied for this scope
 - `N/A` = phase does not apply and is excluded from calculations
 
-Unless noted otherwise, phase weights are equal. Lower-level scopes inherit Requirements, Architecture, and Planning credit from the project phase docs when those docs define that scope clearly. Contract readiness is not the same as implemented product readiness: many units below are contract-ready but still have `0%` implementation because the `trade_winds` package has not been created yet.
+Use exact percentages when there is a better signal, such as task counts, test pass counts, implementation slices, reviewed deliverables, or CI gate promotion.
+
+Contract readiness is not the same as product readiness. A scope can be `100%` complete for Contracts & Tests while still being `0%` complete for Implementation.
+
+Unless noted otherwise, phase weights are equal. Lower-level scopes may inherit Requirements, Architecture, and Planning credit from parent phase documents when those documents clearly define the scope, boundaries, contracts, and work ownership. Do not inherit Contracts & Tests or Implementation credit unless that lower-level scope has direct evidence.
+
+## Recursive Progress Tree
+
+Use one root `PROGRESS.md` first. Split child progress docs out only when a phase, service, component, or unit needs independent ownership, blockers, scoring evidence, or too much detail for the root file.
+
+Current layout:
+
+```text
+docs/loom/
+  PROGRESS.md
+  phases/
+    contracts-tests/PROGRESS.md
+    implementation/PROGRESS.md
+```
+
+Each child progress document should include:
+
+- Link back to its parent progress document
+- Links to child progress documents when they exist
+- Phase scores relevant to that zoom level
+- Evidence links for each score
+- Blockers, open questions, and next score-changing actions
+
+Rule of thumb: if a scope has its own owner, contracts, implementation path, blocker surface, or review path, it can earn its own `PROGRESS.md`.
+
+### Progress Tree Index
+
+Child progress docs exist for the two active drilldown areas: contract readiness and implementation readiness. Add more only when a scope needs independent ownership, blockers, evidence, or review.
+
+| Scope | Type | Parent | Total | Current Focus | Progress Doc | Notes |
+|-------|------|--------|-------|---------------|--------------|-------|
+| Trade Winds | Project | None | 70% | Implementation bootstrap after contract-ready Phase 5 | `docs/loom/PROGRESS.md` | Root cockpit. |
+| Discovery | Phase | Project | 100% | Closed | `docs/loom/01-discovery.md` | Child progress doc not needed. |
+| Requirements | Phase | Project | 100% | Closed | `docs/loom/02-requirements.md` | Child progress doc not needed. |
+| Architecture | Phase | Project | 100% | Closed | `docs/loom/03-architecture.md` | Child progress doc not needed. |
+| Planning & Decomposition | Phase | Project | 100% | Closed | `docs/loom/04-planning.md` | Child progress doc not needed. |
+| Contracts & Tests | Phase | Project | 100% | Contract-ready, implementation-red | `docs/loom/phases/contracts-tests/PROGRESS.md` | Drilldown for test coverage, gates, and deferred decisions. |
+| Implementation | Phase | Project | 0% | Package scaffold next | `docs/loom/phases/implementation/PROGRESS.md` | Drilldown for workstreams, components, units, and next implementation actions. |
+| Review & Retrospective | Phase | Project | 0% | Not started | `docs/loom/07-retrospective.md` | Child progress doc not needed yet. |
+| Project Foundation | Workstream | Implementation | 67% | Create `trade_winds` scaffold | `docs/loom/phases/implementation/PROGRESS.md` | Implementation drilldown. |
+| Persistence & Schema | Workstream | Implementation | 67% | Implement schema/repositories | `docs/loom/phases/implementation/PROGRESS.md` | Implementation drilldown. |
+| Sleeper Client | Workstream | Implementation | 67% | Implement fake/real client boundary | `docs/loom/phases/implementation/PROGRESS.md` | Implementation drilldown. |
+| Crawl Orchestration | Workstream | Implementation | 67% | Implement discovery/sync services | `docs/loom/phases/implementation/PROGRESS.md` | Implementation drilldown. |
+| Transaction Normalization | Workstream | Implementation | 67% | Implement normalizer and asset keys | `docs/loom/phases/implementation/PROGRESS.md` | Implementation drilldown. |
+| Valuation Engine | Workstream | Implementation | 67% | Implement model/confidence/outliers | `docs/loom/phases/implementation/PROGRESS.md` | Implementation drilldown. |
+| Export & Inspection | Workstream | Implementation | 67% | Implement CSV/query/CLI surfaces | `docs/loom/phases/implementation/PROGRESS.md` | Implementation drilldown. |
+| CI Bootstrap | Workstream | Contracts & Tests / Implementation | 75% | Promote from collection to full pytest later | `docs/loom/phases/contracts-tests/PROGRESS.md` | Automation/test-readiness drilldown. |
 
 ## Project Snapshot
 
@@ -53,95 +113,31 @@ Unless noted otherwise, phase weights are equal. Lower-level scopes inherit Requ
 | CI Bootstrap | Workstream | 1 | 75% | 75% | 75% | Codex | Workflow exists for collection/Ruff; full pytest/type gates deferred. |
 | **Child Rollup** | | | | | **69%** | | Rounded equal-weight average. |
 
-## Workstream Progress
+## Workstream Summary
 
 | Workstream | Requirements | Architecture | Planning | Contracts & Tests | Implementation | Review | Total | Evidence |
 |------------|--------------|--------------|----------|-------------------|----------------|--------|-------|----------|
-| Project Foundation | 100% | 100% | 100% | 100% | 0% | 0% | 67% | `tests/unit/test_settings.py`; `tests/cli/test_config_errors.py`; `tests/contracts/test_app_context_contract.py` |
-| Service Boundary Design | 100% | 100% | 100% | 100% | 0% | 0% | 67% | `tests/contracts/test_app_context_contract.py`; `docs/loom/03-architecture.md#component-internal-contracts` |
-| Persistence & Schema | 100% | 100% | 100% | 100% | 0% | 0% | 67% | `tests/contracts/test_database_schema_contract.py`; `tests/contracts/test_repository_contracts.py`; `tests/contracts/test_alembic_migrations_contract.py` |
-| Sleeper Client | 100% | 100% | 100% | 100% | 0% | 0% | 67% | `tests/contracts/test_sleeper_client_contract.py`; `tests/unit/test_rate_limiter.py`; `tests/unit/test_retry_policy.py` |
-| Crawl Orchestration | 100% | 100% | 100% | 100% | 0% | 0% | 67% | `tests/integration/test_crawl_discovery_resume.py`; `tests/integration/test_transaction_sync_persistence.py` |
-| Transaction Normalization | 100% | 100% | 100% | 100% | 0% | 0% | 67% | `tests/unit/test_transaction_normalizer_trades.py`; `tests/unit/test_transaction_normalizer_add_drop.py`; `tests/unit/test_asset_identity.py` |
-| Valuation Engine | 100% | 100% | 100% | 100% | 0% | 0% | 67% | `tests/unit/test_valuation_model_v1.py`; `tests/unit/test_confidence_and_outliers.py`; `tests/integration/test_ranking_generation.py` |
-| Export & Inspection | 100% | 100% | 100% | 100% | 0% | 0% | 67% | `tests/cli/test_export_rankings.py`; `tests/cli/test_inspect_commands.py`; `tests/integration/test_ranking_comparison.py` |
-| Tests & Contracts | 100% | 100% | 100% | 100% | 100% | 0% | 83% | `docs/loom/05-contracts-tests-cicd.md`; `docs/loom/05-remaining-needs.md`; `tests/` |
-| CI Bootstrap | 100% | 100% | 100% | 100% | 50% | 0% | 75% | `.github/workflows/ci.yml`; `uv.lock`; `pyproject.toml`; full pytest promotion deferred. |
+| Project Foundation | 100% | 100% | 100% | 100% | 0% | 0% | 67% | `docs/loom/phases/implementation/PROGRESS.md` |
+| Service Boundary Design | 100% | 100% | 100% | 100% | 0% | 0% | 67% | `docs/loom/phases/implementation/PROGRESS.md` |
+| Persistence & Schema | 100% | 100% | 100% | 100% | 0% | 0% | 67% | `docs/loom/phases/implementation/PROGRESS.md` |
+| Sleeper Client | 100% | 100% | 100% | 100% | 0% | 0% | 67% | `docs/loom/phases/implementation/PROGRESS.md` |
+| Crawl Orchestration | 100% | 100% | 100% | 100% | 0% | 0% | 67% | `docs/loom/phases/implementation/PROGRESS.md` |
+| Transaction Normalization | 100% | 100% | 100% | 100% | 0% | 0% | 67% | `docs/loom/phases/implementation/PROGRESS.md` |
+| Valuation Engine | 100% | 100% | 100% | 100% | 0% | 0% | 67% | `docs/loom/phases/implementation/PROGRESS.md` |
+| Export & Inspection | 100% | 100% | 100% | 100% | 0% | 0% | 67% | `docs/loom/phases/implementation/PROGRESS.md` |
+| Tests & Contracts | 100% | 100% | 100% | 100% | 100% | 0% | 83% | `docs/loom/phases/contracts-tests/PROGRESS.md` |
+| CI Bootstrap | 100% | 100% | 100% | 100% | 50% | 0% | 75% | `docs/loom/phases/contracts-tests/PROGRESS.md` |
 
-## Component Progress
+## Next Score-Changing Actions
 
-| Component | Parent Workstream | Requirements | Architecture | Planning | Contracts & Tests | Implementation | Review | Total | Notes |
-|-----------|-------------------|--------------|--------------|----------|-------------------|----------------|--------|-------|-------|
-| Configuration | Project Foundation | 100% | 100% | 100% | 100% | 0% | 0% | 67% | Env/default validation contract exists. |
-| CLI Application | Project Foundation | 100% | 100% | 100% | 100% | 0% | 0% | 67% | Command names/options are locked. |
-| App Context | Service Boundary Design | 100% | 100% | 100% | 100% | 0% | 0% | 67% | Wiring and override contracts exist. |
-| Database Schema & Migrations | Persistence & Schema | 100% | 100% | 100% | 100% | 0% | 0% | 67% | Table/key/raw JSON contracts exist. |
-| Repository Bundle | Persistence & Schema | 100% | 100% | 100% | 100% | 0% | 0% | 67% | Idempotency/query contracts exist. |
-| Sleeper HTTP Client | Sleeper Client | 100% | 100% | 100% | 100% | 0% | 0% | 67% | Endpoint/raw/error contracts exist. |
-| Sleeper Resilience Helpers | Sleeper Client | 100% | 100% | 100% | 100% | 0% | 0% | 67% | Retry/rate limiter contracts exist. |
-| Sleeper Test Doubles | Sleeper Client | 100% | 100% | 100% | 100% | 0% | 0% | 67% | Fake client/transport APIs accepted. |
-| Discovery Crawl | Crawl Orchestration | 100% | 100% | 100% | 100% | 0% | 0% | 67% | Resume/idempotency contract exists. |
-| Transaction Sync | Crawl Orchestration | 100% | 100% | 100% | 100% | 0% | 0% | 67% | Fixture sync persistence contract exists. |
-| Asset Identity | Transaction Normalization | 100% | 100% | 100% | 100% | 0% | 0% | 67% | Player/pick key contracts exist. |
-| Trade Normalization | Transaction Normalization | 100% | 100% | 100% | 100% | 0% | 0% | 67% | Completed, exact-pick, multi-team, weird-trade contracts exist. |
-| Add/Drop Normalization | Transaction Normalization | 100% | 100% | 100% | 100% | 0% | 0% | 67% | Baseline movement contract exists. |
-| Ranking Model v1 | Valuation Engine | 100% | 100% | 100% | 100% | 0% | 0% | 67% | Deterministic score and recency contracts exist. |
-| Confidence & Outliers | Valuation Engine | 100% | 100% | 100% | 100% | 0% | 0% | 67% | Context and lopsided-trade contracts exist. |
-| Ranking Persistence & Generation | Valuation Engine | 100% | 100% | 100% | 100% | 0% | 0% | 67% | Persisted-fact-only generation contract exists. |
-| CSV Export | Export & Inspection | 100% | 100% | 100% | 100% | 0% | 0% | 67% | Stable column contract exists. |
-| Ranking Inspection | Export & Inspection | 100% | 100% | 100% | 100% | 0% | 0% | 67% | Filter/evidence contracts exist. |
-| Ranking Comparison | Export & Inspection | 100% | 100% | 100% | 100% | 0% | 0% | 67% | Run movement contract exists. |
-| Fixture Workflow | Tests & Contracts | 100% | 100% | 100% | 100% | 100% | 0% | 83% | End-to-end fixture contract exists. |
-| Check Automation | CI Bootstrap | 100% | 100% | 100% | 100% | 50% | 0% | 75% | Collection/Ruff CI exists; full pytest/type checks deferred. |
-
-## Class / Unit Progress
-
-Smallest tracked units are the classes, command groups, helpers, schemas, and workflows that currently have independent contracts or implementation ownership. Additional internal classes should be added here only when their completion matters independently.
-
-| Class / Unit | Parent Component | Contracts & Tests | Implementation | Review | Total | Evidence / Source |
-|--------------|------------------|-------------------|----------------|--------|-------|-------------------|
-| `Settings` | Configuration | 100% | 0% | 0% | 33% | `tests/unit/test_settings.py` |
-| `ConfigError` | Configuration | 100% | 0% | 0% | 33% | `tests/unit/test_settings.py`; `tests/cli/test_config_errors.py` |
-| `trade_winds.cli.app` | CLI Application | 100% | 0% | 0% | 33% | `tests/cli/test_config_errors.py`; `tests/cli/test_command_options.py` |
-| `crawl discover` command | CLI Application | 100% | 0% | 0% | 33% | `tests/cli/test_command_options.py` |
-| `crawl transactions` command | CLI Application | 100% | 0% | 0% | 33% | `tests/cli/test_command_options.py` |
-| `rank` command | CLI Application | 100% | 0% | 0% | 33% | `tests/cli/test_command_options.py` |
-| `export rankings` command | CLI Application | 100% | 0% | 0% | 33% | `tests/cli/test_export_rankings.py` |
-| `inspect rankings` command | CLI Application | 100% | 0% | 0% | 33% | `tests/cli/test_inspect_commands.py` |
-| `inspect asset` command | CLI Application | 100% | 0% | 0% | 33% | `tests/cli/test_inspect_commands.py` |
-| `inspect compare` command | CLI Application | 100% | 0% | 0% | 33% | `tests/cli/test_command_options.py`; `tests/integration/test_ranking_comparison.py` |
-| `AppContext` | App Context | 100% | 0% | 0% | 33% | `tests/contracts/test_app_context_contract.py` |
-| `create_database_schema` | Database Schema & Migrations | 100% | 0% | 0% | 33% | `tests/contracts/test_database_schema_contract.py` |
-| `upgrade_to_head` / `downgrade_to_base` | Database Schema & Migrations | 100% | 0% | 0% | 33% | `tests/contracts/test_alembic_migrations_contract.py` |
-| `create_test_repository_bundle` | Repository Bundle | 100% | 0% | 0% | 33% | `tests/contracts/test_repository_contracts.py` |
-| User/league/roster repositories | Repository Bundle | 100% | 0% | 0% | 33% | `tests/contracts/test_repository_contracts.py` |
-| Crawl state repository | Repository Bundle | 100% | 0% | 0% | 33% | `tests/contracts/test_repository_contracts.py` |
-| Transaction repositories | Repository Bundle | 100% | 0% | 0% | 33% | `tests/contracts/test_repository_contracts.py` |
-| Ranking repositories | Repository Bundle | 100% | 0% | 0% | 33% | `tests/contracts/test_repository_contracts.py` |
-| `SleeperClient` | Sleeper HTTP Client | 100% | 0% | 0% | 33% | `tests/contracts/test_sleeper_client_contract.py` |
-| `FakeSleeperTransport` | Sleeper Test Doubles | 100% | 0% | 0% | 33% | `tests/contracts/test_sleeper_client_contract.py` |
-| `FakeSleeperClient` | Sleeper Test Doubles | 100% | 0% | 0% | 33% | `tests/integration/test_crawl_discovery_resume.py`; `tests/integration/test_full_fixture_workflow.py` |
-| `RateLimiter` | Sleeper Resilience Helpers | 100% | 0% | 0% | 33% | `tests/unit/test_rate_limiter.py` |
-| `FakeClock` | Sleeper Resilience Helpers | 100% | 0% | 0% | 33% | `tests/unit/test_rate_limiter.py` |
-| `RetryPolicy` | Sleeper Resilience Helpers | 100% | 0% | 0% | 33% | `tests/unit/test_retry_policy.py` |
-| Sleeper error classes | Sleeper Resilience Helpers | 100% | 0% | 0% | 33% | `tests/unit/test_retry_policy.py`; `tests/contracts/test_sleeper_client_contract.py` |
-| `CrawlApplicationService.discover` | Discovery Crawl | 100% | 0% | 0% | 33% | `tests/integration/test_crawl_discovery_resume.py` |
-| `CrawlApplicationService.sync_transactions` | Transaction Sync | 100% | 0% | 0% | 33% | `tests/integration/test_transaction_sync_persistence.py` |
-| `player_asset_key` | Asset Identity | 100% | 0% | 0% | 33% | `tests/unit/test_asset_identity.py` |
-| `pick_asset_key` | Asset Identity | 100% | 0% | 0% | 33% | `tests/unit/test_asset_identity.py` |
-| `TransactionNormalizer` | Trade Normalization | 100% | 0% | 0% | 33% | `tests/unit/test_transaction_normalizer_trades.py`; `tests/unit/test_transaction_normalizer_add_drop.py` |
-| `ValuationModelV1` | Ranking Model v1 | 100% | 0% | 0% | 33% | `tests/unit/test_valuation_model_v1.py` |
-| `RankingConfig` | Ranking Model v1 | 100% | 0% | 0% | 33% | `tests/unit/test_valuation_model_v1.py` |
-| `ConfidenceCalculator` | Confidence & Outliers | 100% | 0% | 0% | 33% | `tests/unit/test_confidence_and_outliers.py` |
-| `OutlierDetector` | Confidence & Outliers | 100% | 0% | 0% | 33% | `tests/unit/test_confidence_and_outliers.py` |
-| `RankingApplicationService.generate` | Ranking Persistence & Generation | 100% | 0% | 0% | 33% | `tests/integration/test_ranking_generation.py`; `tests/integration/test_full_fixture_workflow.py` |
-| `RankingQueryService.rankings` | Ranking Inspection | 100% | 0% | 0% | 33% | `tests/cli/test_inspect_commands.py` |
-| `RankingQueryService.asset_evidence` | Ranking Inspection | 100% | 0% | 0% | 33% | `tests/cli/test_inspect_commands.py`; `tests/integration/test_full_fixture_workflow.py` |
-| `RankingQueryService.compare_runs` | Ranking Comparison | 100% | 0% | 0% | 33% | `tests/integration/test_ranking_comparison.py`; `tests/cli/test_command_options.py` |
-| `CsvExporter.export_rankings` | CSV Export | 100% | 0% | 0% | 33% | `tests/cli/test_export_rankings.py`; `tests/integration/test_full_fixture_workflow.py` |
-| `seed_ranking_run` | Fixture Workflow | 100% | 0% | 0% | 33% | `tests/cli/test_export_rankings.py`; `tests/cli/test_inspect_commands.py`; `tests/integration/test_ranking_comparison.py` |
-| `seed_completed_trade_facts` | Fixture Workflow | 100% | 0% | 0% | 33% | `tests/integration/test_ranking_generation.py` |
-| GitHub Actions contract-readiness workflow | Check Automation | 100% | 50% | 0% | 50% | `.github/workflows/ci.yml`; `docs/loom/05-contracts-tests-cicd.md#check-automation-handoff` |
+| Action | Phase / Area | Expected Score Impact | Owner |
+|--------|--------------|-----------------------|-------|
+| Create the minimal `trade_winds` package scaffold and keep collection green | Implementation / Project Foundation | Moves Project Foundation implementation above 0%; may increase project total if scaffold is accepted as implementation progress. | Codex |
+| Implement settings/env validation and CLI help/config errors | Implementation / Project Foundation | Turns first focused red contracts green for Configuration and CLI Application units. | Codex |
+| Implement `AppContext.create` dependency wiring and test override path | Implementation / Service Boundary Design | Moves App Context implementation above 0%. | Codex |
+| Implement database schema creation and migration helpers | Implementation / Persistence & Schema | Moves schema/migration units above 0% and unlocks repository work. | Codex |
+| Promote CI from `pytest --collect-only` to focused/full pytest when green enough | CI Bootstrap | Moves CI Bootstrap implementation beyond 50%. | Codex |
+| Choose Pyright or mypy | CI Bootstrap / Type checking | Allows type-check automation scoring to move from deferred to planned or implemented. | John + Codex |
 
 ## Decisions and Adjustments
 
@@ -150,6 +146,7 @@ Smallest tracked units are the classes, command groups, helpers, schemas, and wo
 | 2026-05-18 | Project | Added recursive progress ledger | Loom framework now expects percent complete by project, workstream, component, and smallest tracked unit. | Codex |
 | 2026-05-18 | Contracts & Tests | Counted Phase 5 as 100% contract-ready | Missing CLI command contracts were added and remaining needs are implementation-facing. | Codex |
 | 2026-05-18 | CI Bootstrap | Counted CI as 50% implemented inside its workstream | Collection/Ruff workflow exists; full pytest, coverage, type checking, and migration gates are deferred until implementation can pass them. | Codex |
+| 2026-05-18 | Progress ledger organization | Added root cockpit rules, update triggers, progress tree index, and next score-changing actions | Loom framework refined how progress ledgers should organize recursive drilldowns. | Codex |
 
 ## Open Progress Questions
 

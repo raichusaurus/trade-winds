@@ -20,3 +20,5 @@ Project decisions and phase outputs live in [`docs/loom`](docs/loom):
 The first pass starts with Discovery before any application scaffolding.
 
 Update the progress ledger whenever changes are pushed to `main`.
+
+The root progress ledger stays concise and links to child ledgers for detailed contract and implementation progress.
