@@ -52,6 +52,21 @@ def test_rank_accepts_model_version_and_run_label(monkeypatch, tmp_path) -> None
     assert fake_context.ranking_service.generate_calls[0].run_label == "smoke"
 
 
+def test_crawl_transactions_dispatches_to_sync_service(monkeypatch, tmp_path) -> None:
+    from trade_winds.cli import app
+    from trade_winds.testing.cli import install_fake_app_context
+
+    fake_context = install_fake_app_context()
+    monkeypatch.setenv("TRADE_WINDS_SLEEPER_USERNAME", "john_seed")
+    monkeypatch.setenv("TRADE_WINDS_DB_PATH", str(tmp_path / "trade-winds.sqlite3"))
+
+    result = CliRunner().invoke(app, ["crawl", "transactions"])
+
+    assert result.exit_code == 0
+    assert len(fake_context.crawl_service.sync_transactions_calls) == 1
+    assert "completed" in result.output
+
+
 def test_inspect_compare_requires_two_run_ids(monkeypatch, tmp_path) -> None:
     from trade_winds.cli import app
 
@@ -62,3 +77,22 @@ def test_inspect_compare_requires_two_run_ids(monkeypatch, tmp_path) -> None:
 
     assert result.exit_code != 0
     assert "--to-run" in result.output
+
+
+def test_inspect_compare_dispatches_to_query_service(monkeypatch, tmp_path) -> None:
+    from trade_winds.cli import app
+    from trade_winds.testing.cli import install_fake_app_context
+
+    fake_context = install_fake_app_context()
+    monkeypatch.setenv("TRADE_WINDS_SLEEPER_USERNAME", "john_seed")
+    monkeypatch.setenv("TRADE_WINDS_DB_PATH", str(tmp_path / "trade-winds.sqlite3"))
+
+    result = CliRunner().invoke(
+        app,
+        ["inspect", "compare", "--from-run", "rank-run-older", "--to-run", "rank-run-newer"],
+    )
+
+    assert result.exit_code == 0
+    assert fake_context.ranking_query_service.compare_calls[0].from_run_id == "rank-run-older"
+    assert fake_context.ranking_query_service.compare_calls[0].to_run_id == "rank-run-newer"
+    assert "player:4046" in result.output

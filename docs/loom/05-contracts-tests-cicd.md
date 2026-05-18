@@ -286,10 +286,12 @@ The current test suite now covers the major phase gaps as executable contracts. 
 | Valuation model fixture with exact expected ranking output | Covered by red unit tests | `tests/unit/test_valuation_model_v1.py`, `tests/fixtures/rankings/` |
 | Confidence/outlier calculator unit tests | Covered by red unit tests | `tests/unit/test_confidence_and_outliers.py` |
 | End-to-end fixture workflow test | Covered by red integration test | `tests/integration/test_full_fixture_workflow.py` |
-| CLI option matrix tests | Partially covered by red CLI tests | `tests/cli/test_command_options.py`; add more options as commands are implemented |
+| CLI option matrix tests | Covered by red CLI tests | `tests/cli/test_command_options.py`; add more options only when new command options are introduced |
 | Live Sleeper smoke tests | Covered by opt-in skipped-by-default test | `tests/live/test_sleeper_live_smoke.py` |
 | Type-checking policy | Deferred to implementation bootstrap | Decide Pyright or mypy before making type checks required |
 | CI/CD workflow file | Covered for contract readiness | `.github/workflows/ci.yml` runs locked dependency sync, Ruff checks, and pytest collection |
+
+See `docs/loom/05-remaining-needs.md` for the phase handoff into implementation.
 
 ### Coverage Matrix
 
@@ -520,8 +522,8 @@ As of 2026-05-15, the test contracts and fixtures have been written and pytest c
 | `uv.lock` generation | Passed | `uv.lock` exists and should be committed with this phase-close work. |
 | Ruff format check | Passed | `UV_CACHE_DIR=.uv-cache uv run ruff format --check .` passed after mechanical formatting. |
 | Ruff lint check | Passed | `UV_CACHE_DIR=.uv-cache uv run ruff check .` passed after mechanical import/style fixes. |
-| Pytest collection | Passed | `UV_CACHE_DIR=.uv-cache uv run pytest --collect-only` collected 56 tests. |
-| Full pytest run | Intentionally red | `UV_CACHE_DIR=.uv-cache uv run pytest` collected 56 tests: 55 failed because `trade_winds` is not implemented yet, and 1 live smoke test was skipped by default. |
+| Pytest collection | Passed | `UV_CACHE_DIR=.uv-cache uv run pytest --collect-only` collected 58 tests after the final CLI command contract additions. |
+| Full pytest run | Intentionally red | `UV_CACHE_DIR=.uv-cache uv run pytest` is expected to fail because `trade_winds` is not implemented yet; the live smoke test remains skipped by default. |
 | CI workflow creation | Passed for contract readiness | `.github/workflows/ci.yml` runs `uv sync --locked`, Ruff format/lint, and pytest collection. Full pytest remains intentionally non-blocking until implementation exists. |
 
 First implementation-bootstrap task:
@@ -555,8 +557,8 @@ These are the remaining testing decisions or validation gates before implementat
 | Need | Timing | Current Position |
 |------|--------|------------------|
 | Create package scaffold | First implementation-bootstrap step | Add the minimal `trade_winds` package shape needed for imports and CLI entry points. This is implementation scaffolding, not a test rewrite. |
-| Re-run collection after scaffold | Immediately after scaffold | `UV_CACHE_DIR=.uv-cache uv run pytest --collect-only` should still collect 56 tests unless new tests are added. |
-| Drive full pytest red to green | Slice by slice during implementation | Current full pytest failure is expected: 55 tests fail because `trade_winds` does not exist yet, and 1 live test skips by default. |
+| Re-run collection after scaffold | Immediately after scaffold | `UV_CACHE_DIR=.uv-cache uv run pytest --collect-only` should still collect 58 tests unless new tests are added. |
+| Drive full pytest red to green | Slice by slice during implementation | Current full pytest failure is expected because `trade_winds` does not exist yet, and the live test skips by default. |
 | Promote CI from collection to full pytest | Once initial implementation slices are green | Replace `uv run pytest --collect-only` with `uv run pytest` when the suite is expected to pass in CI. |
 | Type checker decision | During scaffold slice | Choose Pyright for editor-first feedback or mypy if SQLAlchemy typing/plugin support becomes the priority. Start informational before blocking. |
 | HTTP mocking decision | During Sleeper client slice | Current tests use fake clients/transports. Choose `pytest-httpx` for simple request mocking or `respx` if route-level matching reads cleaner. |

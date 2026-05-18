@@ -8,6 +8,7 @@ This project is the pilot project for using [Loom](https://github.com/raichusaur
 
 Project decisions and phase outputs live in [`docs/loom`](docs/loom):
 
+- [Progress Ledger](docs/loom/PROGRESS.md)
 - [01 Discovery](docs/loom/01-discovery.md)
 - [02 Requirements](docs/loom/02-requirements.md)
 - [03 Architecture](docs/loom/03-architecture.md)
@@ -17,3 +18,5 @@ Project decisions and phase outputs live in [`docs/loom`](docs/loom):
 - [07 Retrospective](docs/loom/07-retrospective.md)
 
 The first pass starts with Discovery before any application scaffolding.
+
+Update the progress ledger whenever changes are pushed to `main`.

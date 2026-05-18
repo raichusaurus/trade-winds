@@ -14,6 +14,7 @@ Use this template to track implementation work against the plan, contracts, and 
 - Architecture document:
 - Planning & Decomposition document:
 - Contracts & Tests document:
+- Progress ledger: `docs/loom/PROGRESS.md`
 
 ---
 
@@ -29,6 +30,16 @@ Use this template to track implementation work against the plan, contracts, and 
 
 ### Completed Work
 - [ ] [Feature/service/module]
+
+### Progress Ledger Updates
+
+Update `docs/loom/PROGRESS.md` during implementation whenever:
+
+- A planned package/module/class is created or removed.
+- A contract test moves from red to green.
+- A workstream, component, or smallest tracked unit changes completion percent.
+- CI/check automation is promoted or relaxed.
+- Changes are pushed to `main`.
 
 ### Deviations from Plan
 | Deviation | Reason | Approved By | Follow-up |
