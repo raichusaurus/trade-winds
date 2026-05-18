@@ -4,7 +4,9 @@ import pytest
 
 
 @pytest.mark.integration
-def test_ranking_generation_reads_persisted_facts_and_writes_evidence(tmp_path, fixture_json) -> None:
+def test_ranking_generation_reads_persisted_facts_and_writes_evidence(
+    tmp_path, fixture_json
+) -> None:
     from trade_winds.app import AppContext
     from trade_winds.config import Settings
     from trade_winds.testing.seed_data import seed_completed_trade_facts
