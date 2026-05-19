@@ -31,14 +31,14 @@
 
 | Workstream | Requirements | Architecture | Planning | Contracts & Tests | Implementation | Review | Total | Evidence |
 |------------|--------------|--------------|----------|-------------------|----------------|--------|-------|----------|
-| Project Foundation | 100% | 100% | 100% | 100% | 0% | 0% | 67% | [System Design Progress](../../scopes/system-design/PROGRESS.md) |
-| Service Boundary Design | 100% | 100% | 100% | 100% | 0% | 0% | 67% | [System Design Progress](../../scopes/system-design/PROGRESS.md) |
-| Persistence & Schema | 100% | 100% | 100% | 100% | 0% | 0% | 67% | [System Design Progress](../../scopes/system-design/PROGRESS.md) |
-| Sleeper Client | 100% | 100% | 100% | 100% | 0% | 0% | 67% | [System Design Progress](../../scopes/system-design/PROGRESS.md) |
-| Crawl Orchestration | 100% | 100% | 100% | 100% | 0% | 0% | 67% | [System Design Progress](../../scopes/system-design/PROGRESS.md) |
-| Transaction Normalization | 100% | 100% | 100% | 100% | 0% | 0% | 67% | [System Design Progress](../../scopes/system-design/PROGRESS.md) |
-| Valuation Engine | 100% | 100% | 100% | 100% | 0% | 0% | 67% | [System Design Progress](../../scopes/system-design/PROGRESS.md) |
-| Export & Inspection | 100% | 100% | 100% | 100% | 0% | 0% | 67% | [System Design Progress](../../scopes/system-design/PROGRESS.md) |
+| Project Foundation | 100% | 100% | 100% | 100% | 0% | 0% | 67% | [Project Foundation Progress](../../scopes/services/project-foundation/PROGRESS.md) |
+| Service Boundary Design | 100% | 100% | 100% | 100% | 0% | 0% | 67% | [Service Boundary Progress](../../scopes/services/service-boundary-design/PROGRESS.md) |
+| Persistence & Schema | 100% | 100% | 100% | 100% | 0% | 0% | 67% | [Persistence Progress](../../scopes/services/persistence-schema/PROGRESS.md) |
+| Sleeper Client | 100% | 100% | 100% | 100% | 0% | 0% | 67% | [Sleeper Client Progress](../../scopes/services/sleeper-client/PROGRESS.md) |
+| Crawl Orchestration | 100% | 100% | 100% | 100% | 0% | 0% | 67% | [Crawl Progress](../../scopes/services/crawl-orchestration/PROGRESS.md) |
+| Transaction Normalization | 100% | 100% | 100% | 100% | 0% | 0% | 67% | [Normalization Progress](../../scopes/services/transaction-normalization/PROGRESS.md) |
+| Valuation Engine | 100% | 100% | 100% | 100% | 0% | 0% | 67% | [Valuation Progress](../../scopes/services/valuation-engine/PROGRESS.md) |
+| Export & Inspection | 100% | 100% | 100% | 100% | 0% | 0% | 67% | [Export & Inspection Progress](../../scopes/services/export-inspection/PROGRESS.md) |
 
 ## Component Progress
 
